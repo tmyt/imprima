@@ -121,6 +121,13 @@ private fun JobRow(
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.ui_job_by, job.userName, time))
+                if (job.uri != null) {
+                    Text(
+                        stringResource(R.string.ui_job_saved_in),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),

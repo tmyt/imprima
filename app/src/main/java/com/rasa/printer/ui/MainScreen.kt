@@ -7,6 +7,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.DocumentsContract
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -81,7 +84,7 @@ fun MainScreen(viewModel: MainViewModel) {
             viewModel.stop()
             return
         }
-        if (Build.VERSION.SDK_INT >= 33 &&
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
@@ -92,12 +95,20 @@ fun MainScreen(viewModel: MainViewModel) {
     }
 
     fun launchJobIntent(job: PrintJob, share: Boolean) {
-        val file = job.file?.takeIf { it.exists() }
-        if (file == null) {
+        if (!job.hasDocument) {
             scope.launch { snackbar.showSnackbar(noFile) }
             return
         }
-        val uri = FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file)
+        val uri = if (job.uri != null) {
+            Uri.parse(job.uri)
+        } else {
+            val file = job.file?.takeIf { it.exists() }
+            if (file == null) {
+                scope.launch { snackbar.showSnackbar(noFile) }
+                return
+            }
+            FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file)
+        }
         val intent = if (share) {
             Intent.createChooser(
                 Intent(Intent.ACTION_SEND).apply {
@@ -120,11 +131,35 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
+    val noFileManager = stringResource(R.string.ui_no_file_manager)
+    fun openFolder() {
+        val view = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(
+                Uri.parse("content://com.android.externalstorage.documents/root/primary"),
+                DocumentsContract.Document.MIME_TYPE_DIR,
+            )
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            context.startActivity(view)
+        } catch (_: ActivityNotFoundException) {
+            try {
+                val pick = Intent(Intent.ACTION_GET_CONTENT).setType("application/pdf")
+                context.startActivity(Intent.createChooser(pick, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (_: ActivityNotFoundException) {
+                scope.launch { snackbar.showSnackbar(noFileManager) }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.ui_app_title)) },
                 actions = {
+                    IconButton(onClick = { openFolder() }) {
+                        Icon(Icons.Filled.FolderOpen, stringResource(R.string.ui_open_folder))
+                    }
                     IconButton(onClick = { showSettings = true }) {
                         Icon(Icons.Filled.Settings, stringResource(R.string.ui_settings))
                     }

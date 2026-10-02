@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Rasa Printer</string>
+    <string name="notification_channel">Printer service</string>
+    <string name="notification_title">Printer running on port %1$d</string>
+    <string name="notification_jobs">Jobs received: %1$d</string>
+    <string name="notification_stop">Stop</string>
 </resources>

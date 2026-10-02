@@ -38,7 +38,6 @@ import com.rasa.printer.printer.PrinterConfig
 fun SettingsDialog(
     config: PrinterConfig,
     addresses: List<String>,
-    port: Int,
     onDismiss: () -> Unit,
     onSave: (PrinterConfig) -> Unit,
 ) {
@@ -114,7 +113,7 @@ fun SettingsDialog(
                 }
                 addresses.forEach { addr ->
                     Text(
-                        "$addr : $port",
+                        addr,
                         style = MaterialTheme.typography.bodyMedium,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier.padding(vertical = 4.dp),

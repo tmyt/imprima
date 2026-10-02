@@ -32,7 +32,7 @@ struct SettingsView: View {
                 }
                 Section {
                     TextField("Port", text: $portText).keyboardType(.numberPad)
-                } header: { Text("Network") } footer: {
+                } header: { Text("Port") } footer: {
                     Text(port == nil ? "Enter a port from 1024 to 65535." : "Port must be 1024 or higher. Default is 8631.")
                         .foregroundStyle(port == nil ? Color.red : Color.secondary)
                 }
@@ -41,10 +41,7 @@ struct SettingsView: View {
                         Text("Not connected to a network").foregroundStyle(.secondary)
                     }
                     ForEach(service.addresses, id: \.self) { addr in
-                        HStack {
-                            Text(addr).font(.body.monospaced())
-                            Text(": \(String(service.config.port))").foregroundStyle(.secondary)
-                        }
+                        Text(addr).font(.body.monospaced())
                     }
                 }
                 Section {

@@ -187,7 +187,6 @@ fun MainScreen(viewModel: MainViewModel) {
         SettingsDialog(
             config = config,
             addresses = status.addresses,
-            port = status.port,
             onDismiss = { showSettings = false },
             onSave = { viewModel.save(it); showSettings = false },
         )

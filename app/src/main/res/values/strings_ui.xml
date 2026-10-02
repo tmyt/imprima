@@ -65,7 +65,7 @@
     <string name="ui_jobs_empty_title">No print jobs yet</string>
     <string name="ui_jobs_empty_hint">Documents sent to this printer appear here and in Documents/Rasa Printer.</string>
     <string name="ui_section_printer">Printer</string>
-    <string name="ui_section_network">Network</string>
+    <string name="ui_section_network">Port</string>
     <string name="ui_section_mode">Mode</string>
     <string name="ui_section_about">About</string>
     <string name="ui_app_version">Version %1$s</string>

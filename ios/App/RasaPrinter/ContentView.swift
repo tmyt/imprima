@@ -86,13 +86,13 @@ struct ContentView: View {
                     Text("No network address found. Connect to Wi-Fi.").font(.footnote).foregroundStyle(.secondary)
                 }
                 ForEach(service.addresses, id: \.self) { addr in
-                    let uri = "ipp://\(addr):\(service.config.port)\(PrinterConfig.resourcePath)"
                     HStack {
-                        Text(uri).font(.footnote.monospaced()).textSelection(.enabled)
+                        Text(addr).font(.body.monospaced()).textSelection(.enabled)
+                        Text(": \(String(service.config.port))").foregroundStyle(.secondary)
                         Spacer()
-                        Button { UIPasteboard.general.string = uri } label: { Image(systemName: "doc.on.doc") }
+                        Button { UIPasteboard.general.string = addr } label: { Image(systemName: "doc.on.doc") }
                             .buttonStyle(.borderless)
-                            .accessibilityLabel("Copy \(uri)")
+                            .accessibilityLabel("Copy \(addr)")
                     }
                 }
             }

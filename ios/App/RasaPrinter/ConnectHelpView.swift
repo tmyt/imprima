@@ -13,7 +13,7 @@ struct ConnectHelpView: View {
         NavigationStack {
             List {
                 Section("macOS") {
-                    Text("Open System Settings → Printers & Scanners → Add Printer. The printer appears via Bonjour. To add it manually, use this address:")
+                    Text("Open System Settings → Printers & Scanners → Add Printer. The printer normally appears automatically (Bonjour), so manual entry is rarely needed. If you do need it, use this address:")
                     code(ippURI)
                 }
                 Section("Linux / CUPS") {
@@ -44,8 +44,13 @@ struct ConnectHelpView: View {
     }
 
     private func code(_ text: String) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            Text(text).font(.footnote.monospaced()).textSelection(.enabled)
+        HStack {
+            ScrollView(.horizontal, showsIndicators: false) {
+                Text(text).font(.footnote.monospaced()).textSelection(.enabled)
+            }
+            Button { UIPasteboard.general.string = text } label: { Image(systemName: "doc.on.doc") }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Copy")
         }
     }
 }

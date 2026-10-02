@@ -27,6 +27,7 @@ final class PrinterService: ObservableObject {
             Self.persist(config)
         }
         addresses = Self.localIPv4Addresses()
+        do { _ = try store() } catch { errorMessage = "Could not open job storage: \(error.localizedDescription)" }
     }
 
     private static func persist(_ config: PrinterConfig) {

@@ -66,7 +66,7 @@ struct ContentView: View {
 
     private var statusLine: String {
         let mode = service.config.compatibilityMode ? "High compatibility" : "PDF only"
-        return service.isRunning ? "Running · port \(service.config.port) · \(mode)" : "Stopped · \(mode)"
+        return service.isRunning ? "Running · \(mode)" : "Stopped · \(mode)"
     }
 
     private var statusCard: some View {
@@ -78,23 +78,6 @@ struct ContentView: View {
                 Text(error).font(.footnote).foregroundStyle(.red)
             } else {
                 Text(statusLine).font(.subheadline).foregroundStyle(.secondary)
-            }
-            if service.isRunning {
-                if service.addresses.isEmpty {
-                    Text("No network address found. Connect to Wi-Fi.").font(.footnote).foregroundStyle(.secondary)
-                }
-                ForEach(service.addresses, id: \.self) { addr in
-                    HStack {
-                        Text(addr).font(.body.monospaced()).textSelection(.enabled)
-                        Text(": \(String(service.config.port))").foregroundStyle(.secondary)
-                        Spacer()
-                        Button { UIPasteboard.general.string = addr } label: { Image(systemName: "doc.on.doc") }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel("Copy \(addr)")
-                    }
-                }
-                Text("Appears automatically in the printer list of devices on this network.")
-                    .font(.footnote).foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)

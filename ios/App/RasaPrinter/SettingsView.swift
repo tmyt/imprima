@@ -36,6 +36,21 @@ struct SettingsView: View {
                     Text(port == nil ? "Enter a port from 1024 to 65535." : "Ports below 1024 need root privileges, so they are not allowed. Default is 8631.")
                         .foregroundStyle(port == nil ? Color.red : Color.secondary)
                 }
+                Section("Current addresses") {
+                    if service.addresses.isEmpty {
+                        Text("Not connected to a network").foregroundStyle(.secondary)
+                    }
+                    ForEach(service.addresses, id: \.self) { addr in
+                        HStack {
+                            Text(addr).font(.body.monospaced()).textSelection(.enabled)
+                            Text(": \(String(service.config.port))").foregroundStyle(.secondary)
+                            Spacer()
+                            Button { UIPasteboard.general.string = addr } label: { Image(systemName: "doc.on.doc") }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("Copy \(addr)")
+                        }
+                    }
+                }
                 Section {
                     Picker("Mode", selection: $compatibility) {
                         Text("PDF only (recommended)").tag(false)
@@ -63,6 +78,7 @@ struct SettingsView: View {
                 }
             }
             .onAppear {
+                service.refreshAddresses()
                 name = service.config.name
                 portText = String(service.config.port)
                 location = service.config.location

@@ -36,21 +36,3 @@ interface RasterSink {
     fun row(row: ByteArray)
     fun endPage()
 }
-
-/**
- * Streaming decoder for Apple URF (image/urf, "UNIRAST" magic) and PWG Raster
- * (image/pwg-raster, "RaS2" magic). FROZEN INTERFACE. Detects the format from the magic.
- * Decodes every page, un-RLEs rows and converts to one of the [PixelFormat]s:
- *  - 1-bit black / 1-bit gray → BLACK_1 (gray 1-bit is inverted so 1 = black)
- *  - 8-bit gray (sgray/W8/"DeviceGray"/CMYK? no) → GRAY_8
- *  - 24-bit sRGB / AdobeRGB / DeviceRGB → RGB_24
- *  - 32-bit CMYK → RGB_24 (naive conversion); 16-bit depths → downsampled to 8-bit
- * Throws RasterFormatException on malformed input.
- */
-object RasterDecoder {
-    @Throws(RasterFormatException::class)
-    fun decode(input: InputStream, sink: RasterSink): Unit = TODO("unit raster-decoder")
-
-    /** Returns "image/urf", "image/pwg-raster" or null, from the first 8 bytes. */
-    fun sniff(head: ByteArray): String? = TODO("unit raster-decoder")
-}

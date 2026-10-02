@@ -67,7 +67,8 @@ final class PrinterService: ObservableObject {
             try server.start()
             self.server = server
             let port = server.boundPort
-            let adv = BonjourAdvertiser(name: config.name, port: port, txt: PrinterAttributes.bonjourTxt(config: config))
+            let adv = BonjourAdvertiser(name: config.name, port: port, txt: PrinterAttributes.bonjourTxt(config: config),
+                                        subtypes: config.compatibilityMode ? ["universal", "print"] : ["print"])
             do {
                 try adv.register()
                 advertiser = adv

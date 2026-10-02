@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var name = ""
     @State private var portText = ""
     @State private var location = ""
+    @State private var compatibility = false
 
     private var port: UInt16? {
         guard let p = Int(portText), (1024...65535).contains(p) else { return nil }
@@ -21,6 +22,16 @@ struct SettingsView: View {
                 Section("Printer") {
                     TextField("Name", text: $name)
                     TextField("Location", text: $location)
+                }
+                Section {
+                    Picker("Mode", selection: $compatibility) {
+                        Text("PDF only (recommended)").tag(false)
+                        Text("High compatibility").tag(true)
+                    }
+                } header: { Text("Mode") } footer: {
+                    Text(compatibility
+                         ? "Also accepts AirPrint raster (URF/PWG) and images; raster pages are converted to image-only PDFs. Visible to iPhone/iPad AirPrint."
+                         : "Accepts PDF documents only. Computers send the original PDF, so text stays selectable. Not visible to iPhone/iPad AirPrint.")
                 }
                 Section {
                     TextField("Port", text: $portText).keyboardType(.numberPad)
@@ -44,6 +55,7 @@ struct SettingsView: View {
                 name = service.config.name
                 portText = String(service.config.port)
                 location = service.config.location
+                compatibility = service.config.compatibilityMode
             }
         }
     }
@@ -54,6 +66,7 @@ struct SettingsView: View {
         c.name = String(trimmedName.prefix(63))
         c.port = port
         c.location = location
+        c.compatibilityMode = compatibility
         service.updateConfig(c)
         dismiss()
     }

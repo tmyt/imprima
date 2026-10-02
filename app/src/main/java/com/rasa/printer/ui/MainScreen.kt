@@ -255,6 +255,14 @@ private fun StatusCard(
                 }
                 Switch(checked = checked, onCheckedChange = onToggle)
             }
+            Text(
+                stringResource(
+                    R.string.ui_mode_line,
+                    stringResource(if (config.compatibilityMode) R.string.ui_mode_compat_short else R.string.ui_mode_pdf_short),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             if (status.state == ServiceState.RUNNING) {
                 if (status.addresses.isEmpty()) {
                     Text(stringResource(R.string.ui_no_addresses), style = MaterialTheme.typography.bodyMedium)

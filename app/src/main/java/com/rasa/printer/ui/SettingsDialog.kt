@@ -1,6 +1,12 @@
 package com.rasa.printer.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.RadioButton
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -32,6 +38,8 @@ fun SettingsDialog(
     var name by remember { mutableStateOf(config.name) }
     var portText by remember { mutableStateOf(config.port.toString()) }
     var location by remember { mutableStateOf(config.location) }
+
+    var compat by remember { mutableStateOf(config.compatibilityMode) }
 
     val port = portText.toIntOrNull()
     val portValid = port != null && port in 1024..65535
@@ -78,6 +86,20 @@ fun SettingsDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
+                Column(Modifier.selectableGroup().padding(top = 16.dp)) {
+                    ModeOption(
+                        selected = !compat,
+                        title = R.string.ui_mode_pdf_title,
+                        description = R.string.ui_mode_pdf_desc,
+                        onClick = { compat = false },
+                    )
+                    ModeOption(
+                        selected = compat,
+                        title = R.string.ui_mode_compat_title,
+                        description = R.string.ui_mode_compat_desc,
+                        onClick = { compat = true },
+                    )
+                }
                 Text(
                     text = stringResource(R.string.ui_field_uuid),
                     style = MaterialTheme.typography.labelMedium,
@@ -95,7 +117,7 @@ fun SettingsDialog(
             TextButton(
                 enabled = portValid && nameValid,
                 onClick = {
-                    onSave(config.copy(name = name.trim(), port = port!!, location = location.trim()))
+                    onSave(config.copy(name = name.trim(), port = port!!, location = location.trim(), compatibilityMode = compat))
                 },
             ) { Text(stringResource(R.string.ui_save)) }
         },
@@ -103,4 +125,30 @@ fun SettingsDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.ui_cancel)) }
         },
     )
+}
+
+@Composable
+private fun ModeOption(
+    selected: Boolean,
+    title: Int,
+    description: Int,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(end = 12.dp, top = 2.dp))
+        Column {
+            Text(stringResource(title), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }

@@ -37,6 +37,8 @@ struct ContentView: View {
                 VStack(alignment: .leading) {
                     Text(service.config.name).font(.headline)
                     Text(service.status).font(.subheadline).foregroundStyle(.secondary)
+                    Text(service.config.compatibilityMode ? "High compatibility" : "PDF only")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
             if service.isRunning {

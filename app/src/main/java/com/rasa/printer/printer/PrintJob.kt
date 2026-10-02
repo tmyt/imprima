@@ -23,6 +23,11 @@ data class PrintJob(
     /** epoch milliseconds */
     val createdAt: Long,
     val sizeBytes: Long,
-    /** Stored document file, null until a document has been received. */
+    /** Internal document file; null until a document has been received, and null once exported to [uri]. */
     val file: File?,
-)
+    /** content:// URI of the exported document in shared storage (MediaStore), null while not exported. */
+    val uri: String? = null,
+) {
+    /** True when a document is available either internally or in shared storage. */
+    val hasDocument: Boolean get() = file != null || uri != null
+}

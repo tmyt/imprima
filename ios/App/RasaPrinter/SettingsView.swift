@@ -51,8 +51,8 @@ struct SettingsView: View {
                     }
                 } header: { Text("Mode") } footer: {
                     Text(compatibility
-                         ? "Also accepts AirPrint raster (URF/PWG) and images; raster pages are converted to image-only PDFs. Visible to iPhone/iPad AirPrint."
-                         : "Accepts PDF documents only. Computers send the original PDF, so text stays selectable. Not visible to iPhone/iPad AirPrint.")
+                         ? "Also accepts AirPrint raster and images, converted to PDF."
+                         : "Accepts PDF only. Not visible to AirPrint.")
                 }
                 Section("About") {
                     LabeledContent("Version", value: appVersion)

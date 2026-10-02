@@ -1,4 +1,4 @@
-# Rasa Printer — IPP Everywhere virtual printer for Android
+# Rasa Printer — IPP Everywhere virtual printer for Android and iOS
 
 Turns an Android device into a driverless network printer. Anything "printed" to it
 (from macOS, Windows, Linux/CUPS, iOS AirPrint, Android) is stored on the device as a
@@ -64,3 +64,22 @@ The page size follows the raster resolution (e.g. 2479×3508 px @ 300 dpi → A4
   documents are converted to image-only PDFs (no text layer).
 - One document per job (`multiple-document-jobs-supported = false`).
 - No TLS (`ipps://`); use on trusted networks only.
+
+## iOS version (`ios/`)
+
+A Swift port with the same protocol stack lives in `ios/`: the Swift package
+`RasaPrinterCore` (IPP codec, POSIX HTTP/1.1 server, IPP Everywhere handler, URF/PWG
+raster → PDF, Bonjour via dnssd) and a SwiftUI app in `ios/App` (project generated with
+xcodegen). Received documents are saved in the app's Documents folder, visible in the
+Files app under "On My iPhone > Rasa Printer".
+
+```sh
+cd ios && swift test                      # core tests incl. ipptool conformance (macOS)
+cd ios/App && xcodegen generate && \
+xcodebuild -project RasaPrinter.xcodeproj -scheme RasaPrinter \
+  -destination 'platform=iOS Simulator,name=iPhone 18 Pro' build
+```
+
+iOS limitation: there is no equivalent of an Android foreground service, so the printer
+only runs while the app is in the foreground (the app disables the idle timer while
+running). Launch argument `--autostart` starts the printer immediately (used for testing).

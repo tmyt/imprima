@@ -43,6 +43,15 @@ Identify-Printer.
 - **iOS**: Share → Print (requires Android 13+ on the printer side for the `_universal`
   subtype that AirPrint discovery relies on).
 
+## Modes
+
+| Mode | Accepts | Advertises | Who can print |
+|---|---|---|---|
+| **PDF only** (default) | `application/pdf` (octet-stream must sniff as PDF; anything else → `client-error-document-format-not-supported`) | `pdl=application/pdf`, no `URF`, subtype `_print` | macOS, Linux/CUPS, anything that sends PDF. Text stays selectable. Not listed by iOS AirPrint. |
+| **High compatibility** | PDF, URF, PWG Raster, JPEG, PNG | full `pdl`, `URF=…`, subtypes `_universal,_print` | Everything incl. iPhone/iPad AirPrint; raster pages are converted to image-only PDFs. |
+
+The mode is switched in Settings and takes effect immediately (the advertisement is re-registered).
+
 ## Where documents go
 
 Finished documents are written to shared storage through MediaStore as

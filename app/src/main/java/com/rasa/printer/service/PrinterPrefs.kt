@@ -19,6 +19,7 @@ object PrinterPrefs {
             uuid = uuid,
             location = sp.getString("location", "") ?: "",
             makeAndModel = sp.getString("makeAndModel", null) ?: "Rasa Virtual Printer",
+            compatibilityMode = sp.getBoolean("compatibilityMode", false),
         )
         if (!sp.contains("uuid") || !sp.contains("name")) save(context, cfg)
         return cfg
@@ -31,6 +32,7 @@ object PrinterPrefs {
             .putString("uuid", config.uuid)
             .putString("location", config.location)
             .putString("makeAndModel", config.makeAndModel)
+            .putBoolean("compatibilityMode", config.compatibilityMode)
             .apply()
     }
 

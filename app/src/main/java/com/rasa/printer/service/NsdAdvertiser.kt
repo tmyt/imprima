@@ -6,6 +6,7 @@ import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.util.Log
+import com.rasa.printer.printer.PrinterAttributes
 import com.rasa.printer.printer.PrinterConfig
 
 /** Advertises the printer over DNS-SD as `_ipp._tcp` (+ AirPrint `_universal` subtype). */
@@ -44,8 +45,8 @@ class NsdAdvertiser(
             serviceName = config.name
             serviceType = "_ipp._tcp"
             port = this@NsdAdvertiser.port
-            txt().forEach { (k, v) -> setAttribute(k, v) }
-            if (withSubtypes && Build.VERSION.SDK_INT >= 33) subtypes = setOf("_universal", "_print")
+            PrinterAttributes.bonjourTxt(config).forEach { (k, v) -> setAttribute(k, v) }
+            if (withSubtypes && Build.VERSION.SDK_INT >= 33) subtypes = if (config.compatibilityMode) setOf("_universal", "_print") else setOf("_print")
         }
         val variant = if (withSubtypes) "with subtypes" else "without subtypes"
         val l = object : NsdManager.RegistrationListener {
@@ -93,27 +94,6 @@ class NsdAdvertiser(
             try { multicastLock?.takeIf { it.isHeld }?.release() } catch (e: Exception) { Log.w(TAG, "release failed", e) }
             multicastLock = null
         }
-    }
-
-    private fun txt(): Map<String, String> {
-        val m = linkedMapOf(
-            "txtvers" to "1",
-            "qtotal" to "1",
-            "rp" to "ipp/print",
-            "ty" to config.name,
-            "product" to "(${config.makeAndModel})",
-            "pdl" to "application/pdf,image/pwg-raster,image/urf,image/jpeg,image/png",
-            "URF" to "V1.4,W8,SRGB24,CP1,RS300-600,IS1,MT1-2-3,OB9,PQ3-4-5,DM1",
-            "Color" to "T",
-            "Duplex" to "F",
-            "Scan" to "F",
-            "Fax" to "F",
-            "kind" to "document",
-            "UUID" to config.uuid,
-            "priority" to "0",
-        )
-        if (config.location.isNotEmpty()) m["note"] = config.location
-        return m
     }
 
     private companion object { const val TAG = "RasaPrinter" }

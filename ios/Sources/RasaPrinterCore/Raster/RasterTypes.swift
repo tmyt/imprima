@@ -40,40 +40,7 @@ public protocol RasterSink: AnyObject {
     func endPage()
 }
 
-/// Streaming decoder for Apple URF ("UNIRAST") and PWG Raster ("RaS2"). FROZEN INTERFACE.
-public enum RasterDecoder {
-    public static func decode(_ input: ByteInputStream, sink: RasterSink) throws { fatalError("TODO unit swift-raster") }
-    /// "image/urf" | "image/pwg-raster" | nil from the first 8 bytes.
-    public static func sniff(_ head: Data) -> String? { fatalError("TODO unit swift-raster") }
-}
-
 /// Optional lossy encoder (DCTDecode) for gray8/rgb24 pages; nil → Flate fallback. FROZEN INTERFACE.
 public protocol JpegEncoder {
     func encode(width: Int, height: Int, format: PixelFormat, pixels: Data, quality: Int) -> Data?
-}
-
-/// JPEG via ImageIO (macOS + iOS). FROZEN INTERFACE.
-public struct ImageIOJpegEncoder: JpegEncoder {
-    public init() {}
-    public func encode(width: Int, height: Int, format: PixelFormat, pixels: Data, quality: Int) -> Data? { fatalError("TODO unit swift-raster") }
-}
-
-/// Dependency-free PDF writer: one full-page image per page. FROZEN INTERFACE.
-public final class PdfWriter {
-    public init(url: URL, jpegEncoder: JpegEncoder? = nil, jpegQuality: Int = 85) throws { fatalError("TODO unit swift-raster") }
-    public func addPage(_ info: RasterPageInfo, pixels: Data) throws { fatalError("TODO unit swift-raster") }
-    /// Writes page tree, catalog, xref, trailer; closes the file. Idempotent.
-    public func close() throws { fatalError("TODO unit swift-raster") }
-}
-
-/// FROZEN INTERFACE.
-public enum RasterToPdf {
-    public static func convert(input: ByteInputStream, to url: URL, jpegEncoder: JpegEncoder? = nil) throws { fatalError("TODO unit swift-raster") }
-}
-
-/// DocumentConverter turning image/urf and image/pwg-raster (or sniffed octet-stream) into PDF. FROZEN INTERFACE.
-public struct RasterDocumentConverter: DocumentConverter {
-    public let jpegEncoder: JpegEncoder?
-    public init(jpegEncoder: JpegEncoder? = ImageIOJpegEncoder()) { self.jpegEncoder = jpegEncoder }
-    public func convert(source: URL, format: String, target: (String) -> URL) throws -> (URL, String)? { fatalError("TODO unit swift-raster") }
 }

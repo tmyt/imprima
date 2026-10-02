@@ -68,8 +68,7 @@ struct JobListView: View {
             if let url = job.fileURL {
                 ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
             }
-            Button(role: .destructive) { pendingDelete = job } label: { Image(systemName: "trash") }
-                .accessibilityLabel("Delete")
+            Button(role: .destructive) { pendingDelete = job } label: { Label("Delete", systemImage: "trash") }
         }
     }
 

@@ -33,33 +33,49 @@ class NsdAdvertiser(
             }
             val nsd = appContext.getSystemService(Context.NSD_SERVICE) as? NsdManager
             if (nsd == null) { Log.w(TAG, "No NsdManager"); return }
-            val info = NsdServiceInfo().apply {
-                serviceName = config.name
-                serviceType = "_ipp._tcp"
-                port = this@NsdAdvertiser.port
-                txt().forEach { (k, v) -> setAttribute(k, v) }
-                if (Build.VERSION.SDK_INT >= 33) subtypes = setOf("universal", "print")
+            val withSubtypes = Build.VERSION.SDK_INT >= 33
+            registerVariant(nsd, withSubtypes)
+        }
+    }
+
+    // Must hold lock.
+    private fun registerVariant(nsd: NsdManager, withSubtypes: Boolean) {
+        val info = NsdServiceInfo().apply {
+            serviceName = config.name
+            serviceType = "_ipp._tcp"
+            port = this@NsdAdvertiser.port
+            txt().forEach { (k, v) -> setAttribute(k, v) }
+            if (withSubtypes && Build.VERSION.SDK_INT >= 33) subtypes = setOf("_universal", "_print")
+        }
+        val variant = if (withSubtypes) "with subtypes" else "without subtypes"
+        val l = object : NsdManager.RegistrationListener {
+            override fun onServiceRegistered(i: NsdServiceInfo) {
+                Log.i(TAG, "NSD registered ($variant) as '${i.serviceName}' on port $port")
             }
-            val l = object : NsdManager.RegistrationListener {
-                override fun onServiceRegistered(i: NsdServiceInfo) {
-                    Log.i(TAG, "NSD registered as '${i.serviceName}' on port $port")
-                }
-                override fun onRegistrationFailed(i: NsdServiceInfo, errorCode: Int) {
-                    Log.e(TAG, "NSD registration failed: $errorCode")
-                }
-                override fun onServiceUnregistered(i: NsdServiceInfo) {
-                    Log.i(TAG, "NSD unregistered '${i.serviceName}'")
-                }
-                override fun onUnregistrationFailed(i: NsdServiceInfo, errorCode: Int) {
-                    Log.w(TAG, "NSD unregistration failed: $errorCode")
+            override fun onRegistrationFailed(i: NsdServiceInfo, errorCode: Int) {
+                Log.e(TAG, "NSD registration failed ($variant): $errorCode")
+                if (withSubtypes) {
+                    synchronized(lock) {
+                        if (listener === this) {
+                            listener = null
+                            try { registerVariant(nsd, false) } catch (e: Exception) { Log.e(TAG, "retry threw", e) }
+                        }
+                    }
                 }
             }
-            try {
-                nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, l)
-                listener = l
-            } catch (e: Exception) {
-                Log.e(TAG, "registerService threw", e)
+            override fun onServiceUnregistered(i: NsdServiceInfo) {
+                Log.i(TAG, "NSD unregistered '${i.serviceName}'")
             }
+            override fun onUnregistrationFailed(i: NsdServiceInfo, errorCode: Int) {
+                Log.w(TAG, "NSD unregistration failed: $errorCode")
+            }
+        }
+        try {
+            listener = l
+            nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, l)
+        } catch (e: Exception) {
+            listener = null
+            Log.e(TAG, "registerService threw ($variant)", e)
         }
     }
 

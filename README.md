@@ -43,6 +43,13 @@ Identify-Printer.
 - **iOS**: Share → Print (requires Android 13+ on the printer side for the `_universal`
   subtype that AirPrint discovery relies on).
 
+## Where documents go
+
+Finished documents are written to shared storage through MediaStore as
+`Documents/Rasa Printer/<yyyyMMdd-HHmmss>_<job name>.<ext>`, so they show up in the
+Files app and can be opened by any viewer. Deleting a job in the app removes that file.
+Internal copies are kept only if the export fails.
+
 ## Raster → PDF conversion
 
 AirPrint clients (iOS, macOS) usually send pages pre-rendered as Apple URF or PWG Raster.

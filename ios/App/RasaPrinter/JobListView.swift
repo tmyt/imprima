@@ -30,8 +30,14 @@ struct JobListView: View {
 
     var body: some View {
         if service.jobs.isEmpty {
-            Text("No print jobs yet. Jobs sent to this printer appear here and in the Files app.")
-                .foregroundStyle(.secondary)
+            VStack(spacing: 6) {
+                Image(systemName: "printer").font(.system(size: 40)).foregroundStyle(.secondary)
+                Text("No print jobs yet").font(.headline)
+                Text("Documents sent to this printer appear here and in the Files app.")
+                    .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
         } else {
             ForEach(service.jobs) { job in row(job) }
         }
@@ -41,24 +47,43 @@ struct JobListView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(job.name.isEmpty ? "Job \(job.id)" : job.name).font(.headline).lineLimit(1)
-                Text("\(job.userName) · \(Self.formatLabel(job.format)) · \(ByteCountFormatter.string(fromByteCount: job.sizeBytes, countStyle: .file))")
-                    .font(.footnote).foregroundStyle(.secondary)
-                HStack(spacing: 4) {
-                    Text(job.createdAt, format: .dateTime.month().day().hour().minute())
-                    Text("· \(Self.stateLabel(job.state))")
-                }
-                .font(.caption).foregroundStyle(.secondary)
+                Text(detail(job)).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer()
-            if let url = job.fileURL {
-                ShareLink(item: url) { Image(systemName: "square.and.arrow.up") }
-                    .buttonStyle(.borderless)
+            if job.state != .completed {
+                Text(Self.stateLabel(job.state))
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Self.badgeColor(job.state).opacity(0.18), in: Capsule())
+                    .foregroundStyle(Self.badgeColor(job.state))
             }
         }
         .contentShape(Rectangle())
         .onTapGesture { if job.fileURL != nil { preview = job } }
         .swipeActions {
             Button(role: .destructive) { pendingDelete = job } label: { Label("Delete", systemImage: "trash") }
+        }
+        .contextMenu {
+            if let url = job.fileURL {
+                ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
+            }
+            Button(role: .destructive) { pendingDelete = job } label: { Label("Delete", systemImage: "trash") }
+        }
+    }
+
+    private func detail(_ job: PrintJob) -> String {
+        let size = ByteCountFormatter.string(fromByteCount: job.sizeBytes, countStyle: .file)
+        let date = job.createdAt.formatted(.dateTime.month(.abbreviated).day().hour().minute())
+        var parts = [Self.formatLabel(job.format), size, date]
+        if !job.userName.isEmpty { parts.append(job.userName) }
+        return parts.joined(separator: " · ")
+    }
+
+    static func badgeColor(_ s: JobState) -> Color {
+        switch s {
+        case .pending: return .orange
+        case .aborted, .canceled: return .red
+        default: return .gray
         }
     }
 

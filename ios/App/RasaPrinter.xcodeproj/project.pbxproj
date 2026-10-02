@@ -12,6 +12,7 @@
 		5E045F730F6E82E409191E5B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F78D03E9EB127A1803EA35 /* ContentView.swift */; };
 		5E2C55379B15059CA7068CEF /* RasaPrinterCore in Frameworks */ = {isa = PBXBuildFile; productRef = FA666344971216C8A09D65B9 /* RasaPrinterCore */; };
 		91467BD944CA86023A121439 /* RasaPrinterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D8F84BF334128C63DCC35 /* RasaPrinterApp.swift */; };
+		926C54B520C7D4D3CB40C1CC /* ConnectHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3AEDD15A43ADA398383B666 /* ConnectHelpView.swift */; };
 		D7D085CEFB9136FB774791EE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723D092A136BE52B9A0E4CAE /* SettingsView.swift */; };
 		F33ECA9E56F6215721A164ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0286EBD059D2D5243B9E5D2E /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,7 @@
 		723D092A136BE52B9A0E4CAE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		82F78D03E9EB127A1803EA35 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		90D9B87FD0AF63E5A3EC3F50 /* JobListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobListView.swift; sourceTree = "<group>"; };
+		D3AEDD15A43ADA398383B666 /* ConnectHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectHelpView.swift; sourceTree = "<group>"; };
 		E7BF753598DD1E459B89B9C0 /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = ..; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -44,6 +46,7 @@
 			isa = PBXGroup;
 			children = (
 				0286EBD059D2D5243B9E5D2E /* Assets.xcassets */,
+				D3AEDD15A43ADA398383B666 /* ConnectHelpView.swift */,
 				82F78D03E9EB127A1803EA35 /* ContentView.swift */,
 				1C90DC40DA92C7D1202AB843 /* Info.plist */,
 				90D9B87FD0AF63E5A3EC3F50 /* JobListView.swift */,
@@ -155,6 +158,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				926C54B520C7D4D3CB40C1CC /* ConnectHelpView.swift in Sources */,
 				5E045F730F6E82E409191E5B /* ContentView.swift in Sources */,
 				2CE8E7B422F704B5EB1FE5E9 /* JobListView.swift in Sources */,
 				1647E115D3DF24E9F058F2D2 /* PrinterService.swift in Sources */,

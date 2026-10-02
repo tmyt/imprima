@@ -110,6 +110,17 @@ final class PrinterService: ObservableObject {
         do { try store().delete(id) } catch { errorMessage = error.localizedDescription }
     }
 
+    func deleteAllJobs() {
+        do {
+            let store = try store()
+            for job in store.list() { store.delete(job.id) }
+        } catch { errorMessage = error.localizedDescription }
+    }
+
+    var documentsDirectory: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+
     func refreshAddresses() {
         addresses = Self.localIPv4Addresses()
     }

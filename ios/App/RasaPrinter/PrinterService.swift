@@ -83,7 +83,7 @@ final class PrinterService: ObservableObject {
             UIApplication.shared.isIdleTimerDisabled = true
             refreshAddresses()
         } catch {
-            errorMessage = "Could not start printer: \(error.localizedDescription)"
+            errorMessage = error.localizedDescription
             status = "Stopped"
             isRunning = false
         }

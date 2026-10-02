@@ -69,7 +69,6 @@ fun MainScreen(viewModel: MainViewModel) {
     var showSettings by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<PrintJob?>(null) }
     var showDeleteAll by remember { mutableStateOf(false) }
-    var showHelp by remember { mutableStateOf(false) }
 
     val noApp = stringResource(R.string.ui_no_app_to_open)
     val noFile = stringResource(R.string.ui_no_file)
@@ -132,6 +131,15 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
+    fun copyText(text: String) {
+        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText("printer address", text))
+        // Android 13+ shows its own confirmation.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            scope.launch { snackbar.showSnackbar(copiedMsg) }
+        }
+    }
+
     val noFileManager = stringResource(R.string.ui_no_file_manager)
     fun openFolder() {
         val view = Intent(Intent.ACTION_VIEW).apply {
@@ -171,13 +179,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 status = status,
                 config = config,
                 onToggle = ::onToggle,
-                onHelp = { showHelp = true },
-                onCopy = { text ->
-                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    cm.setPrimaryClip(ClipData.newPlainText("printer address", text))
-                    // Android 13+ shows its own confirmation.
-                    if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar(copiedMsg) }
-                },
+                onCopy = ::copyText,
                 modifier = Modifier.padding(16.dp),
             )
             JobsHeader(
@@ -199,15 +201,6 @@ fun MainScreen(viewModel: MainViewModel) {
             config = config,
             onDismiss = { showSettings = false },
             onSave = { viewModel.save(it); showSettings = false },
-        )
-    }
-
-    if (showHelp) {
-        ConnectHelpSheet(
-            address = status.addresses.firstOrNull(),
-            port = status.port,
-            compatibilityMode = config.compatibilityMode,
-            onDismiss = { showHelp = false },
         )
     }
 

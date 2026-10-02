@@ -5,7 +5,6 @@ import RasaPrinterCore
 struct ContentView: View {
     @EnvironmentObject var service: PrinterService
     @State private var showSettings = false
-    @State private var showHelp = false
     @State private var preview: PrintJob?
     @State private var pendingDelete: PrintJob?
     @State private var confirmDeleteAll = false
@@ -52,7 +51,6 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
-            .sheet(isPresented: $showHelp) { ConnectHelpView() }
         }
     }
 
@@ -95,11 +93,9 @@ struct ContentView: View {
                             .accessibilityLabel("Copy \(addr)")
                     }
                 }
+                Text("Appears automatically in the printer list of devices on this network.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
-            Button { showHelp = true } label: {
-                Label("How to connect", systemImage: "questionmark.circle").font(.footnote)
-            }
-            .buttonStyle(.borderless)
         }
         .padding(.vertical, 4)
     }

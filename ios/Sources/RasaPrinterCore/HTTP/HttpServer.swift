@@ -120,9 +120,10 @@ public final class HttpServer {
             $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(fd4, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) }
         }
         if rc != 0 || listen(fd4, 50) != 0 {
-            let msg = String(cString: strerror(errno))
+            let code = errno
+            let msg = String(cString: strerror(code))
             Darwin.close(fd4)
-            throw StreamError.io("bind port \(port): \(msg)")
+            throw StreamError.io(code == EADDRINUSE ? "Port \(port) is already in use" : "Cannot bind port \(port): \(msg)")
         }
         return fd4
     }

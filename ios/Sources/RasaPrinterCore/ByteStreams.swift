@@ -6,10 +6,18 @@ public protocol ByteInputStream: AnyObject {
     func read(into buffer: UnsafeMutablePointer<UInt8>, maxLength: Int) throws -> Int
 }
 
-public enum StreamError: Error, Equatable {
+public enum StreamError: Error, Equatable, LocalizedError {
     case unexpectedEOF
     case closed
     case io(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .unexpectedEOF: return "Unexpected end of data"
+        case .closed: return "Connection closed"
+        case .io(let m): return m
+        }
+    }
 }
 
 public extension ByteInputStream {

@@ -25,4 +25,5 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun stop() = PrinterController.stop(getApplication())
     fun save(config: PrinterConfig) = PrinterController.updateConfig(getApplication(), config)
     fun delete(jobId: Int) = jobStore.delete(jobId)
+    fun deleteAll() = jobStore.list().forEach { jobStore.delete(it.id) }
 }

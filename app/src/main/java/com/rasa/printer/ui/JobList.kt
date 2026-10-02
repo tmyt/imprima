@@ -11,13 +11,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -25,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,8 +36,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rasa.printer.R
@@ -65,6 +70,41 @@ fun jobStateLabel(state: JobState): String = stringResource(
 )
 
 @Composable
+fun JobsHeader(
+    count: Int,
+    onOpenFolder: () -> Unit,
+    onDeleteAll: () -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    Row(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.ui_jobs_title_count, count),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f),
+        )
+        Box {
+            IconButton(onClick = { menuOpen = true }) {
+                Icon(Icons.Filled.MoreVert, stringResource(R.string.ui_more_actions))
+            }
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.ui_open_in_files)) },
+                    onClick = { menuOpen = false; onOpenFolder() },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.ui_delete_all)) },
+                    enabled = count > 0,
+                    onClick = { menuOpen = false; onDeleteAll() },
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun JobList(
     jobs: List<PrintJob>,
     onOpen: (PrintJob) -> Unit,
@@ -73,11 +113,23 @@ fun JobList(
     modifier: Modifier = Modifier,
 ) {
     if (jobs.isEmpty()) {
-        Box(modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        Column(
+            modifier.fillMaxSize().padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+        ) {
+            Icon(
+                Icons.Filled.Print,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(stringResource(R.string.ui_jobs_empty_title), style = MaterialTheme.typography.titleMedium)
             Text(
-                stringResource(R.string.ui_jobs_empty),
-                style = MaterialTheme.typography.bodyLarge,
+                stringResource(R.string.ui_jobs_empty_hint),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
         return
@@ -87,6 +139,24 @@ fun JobList(
             JobRow(job, onOpen, onShare, onDelete)
             HorizontalDivider()
         }
+    }
+}
+
+@Composable
+private fun StateBadge(state: JobState) {
+    val scheme = MaterialTheme.colorScheme
+    val (bg, fg, border) = when (state) {
+        JobState.PENDING -> Triple(scheme.tertiaryContainer, scheme.onTertiaryContainer, null)
+        JobState.ABORTED, JobState.CANCELED ->
+            Triple(scheme.errorContainer, scheme.onErrorContainer, null)
+        else -> Triple(Color.Transparent, scheme.onSurfaceVariant, BorderStroke(1.dp, scheme.outline))
+    }
+    Surface(color = bg, contentColor = fg, shape = MaterialTheme.shapes.small, border = border) {
+        Text(
+            jobStateLabel(state),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+        )
     }
 }
 
@@ -100,11 +170,13 @@ private fun JobRow(
 ) {
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
-    val time = DateUtils.getRelativeTimeSpanString(
-        job.createdAt, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS,
-    ).toString()
+    val time = DateUtils.formatDateTime(
+        context, job.createdAt,
+        DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_MONTH,
+    )
     val size = Formatter.formatShortFileSize(context, job.sizeBytes)
-    val format = jobFormatLabel(job.format)
+    val details = listOf(jobFormatLabel(job.format), size, time, job.userName)
+        .filter { it.isNotBlank() }.joinToString(" · ")
 
     ListItem(
         modifier = Modifier.combinedClickable(
@@ -113,29 +185,15 @@ private fun JobRow(
         ),
         headlineContent = {
             Text(
-                job.name.ifBlank { stringResource(R.string.ui_job_unnamed) },
+                job.name.ifBlank { stringResource(R.string.ui_job_n, job.id) },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         },
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.ui_job_by, job.userName, time))
-                if (job.uri != null) {
-                    Text(
-                        stringResource(R.string.ui_job_saved_in),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.ui_job_meta, format, size))
-                    AssistChip(onClick = {}, label = { Text(jobStateLabel(job.state)) })
-                }
+                Text(details, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (job.state != JobState.COMPLETED) StateBadge(job.state)
             }
         },
         trailingContent = {

@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,11 @@ fun SettingsDialog(
     var portText by remember { mutableStateOf(config.port.toString()) }
     var location by remember { mutableStateOf(config.location) }
 
+    val context = LocalContext.current
+    val version = remember {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
+            .getOrNull() ?: "?"
+    }
     var compat by remember { mutableStateOf(config.compatibilityMode) }
 
     val port = portText.toIntOrNull()
@@ -52,6 +58,7 @@ fun SettingsDialog(
             Column(
                 Modifier.verticalScroll(rememberScrollState()),
             ) {
+                SectionLabel(R.string.ui_section_printer, first = true)
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -63,6 +70,14 @@ fun SettingsDialog(
                     } else null,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text(stringResource(R.string.ui_field_location)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                SectionLabel(R.string.ui_section_network)
                 OutlinedTextField(
                     value = portText,
                     onValueChange = { v -> portText = v.filter { it.isDigit() }.take(5) },
@@ -77,16 +92,10 @@ fun SettingsDialog(
                             ),
                         )
                     },
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedTextField(
-                    value = location,
-                    onValueChange = { location = it },
-                    label = { Text(stringResource(R.string.ui_field_location)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                )
-                Column(Modifier.selectableGroup().padding(top = 16.dp)) {
+                SectionLabel(R.string.ui_section_mode)
+                Column(Modifier.selectableGroup()) {
                     ModeOption(
                         selected = !compat,
                         title = R.string.ui_mode_pdf_title,
@@ -100,16 +109,22 @@ fun SettingsDialog(
                         onClick = { compat = true },
                     )
                 }
+                SectionLabel(R.string.ui_section_about)
                 Text(
                     text = stringResource(R.string.ui_field_uuid),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 16.dp),
                 )
                 Text(
                     text = config.uuid,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.ui_app_version, version),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
             }
         },
@@ -151,4 +166,14 @@ private fun ModeOption(
             )
         }
     }
+}
+
+@Composable
+private fun SectionLabel(title: Int, first: Boolean = false) {
+    Text(
+        stringResource(title),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = if (first) 0.dp else 20.dp, bottom = 8.dp),
+    )
 }

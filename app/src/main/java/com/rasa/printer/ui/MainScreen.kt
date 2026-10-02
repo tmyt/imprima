@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -69,6 +68,8 @@ fun MainScreen(viewModel: MainViewModel) {
     val snackbar = remember { SnackbarHostState() }
     var showSettings by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<PrintJob?>(null) }
+    var showDeleteAll by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
 
     val noApp = stringResource(R.string.ui_no_app_to_open)
     val noFile = stringResource(R.string.ui_no_file)
@@ -157,9 +158,6 @@ fun MainScreen(viewModel: MainViewModel) {
             TopAppBar(
                 title = { Text(stringResource(R.string.ui_app_title)) },
                 actions = {
-                    IconButton(onClick = { openFolder() }) {
-                        Icon(Icons.Filled.FolderOpen, stringResource(R.string.ui_open_folder))
-                    }
                     IconButton(onClick = { showSettings = true }) {
                         Icon(Icons.Filled.Settings, stringResource(R.string.ui_settings))
                     }
@@ -173,6 +171,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 status = status,
                 config = config,
                 onToggle = ::onToggle,
+                onHelp = { showHelp = true },
                 onCopy = { text ->
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     cm.setPrimaryClip(ClipData.newPlainText("printer address", text))
@@ -181,10 +180,10 @@ fun MainScreen(viewModel: MainViewModel) {
                 },
                 modifier = Modifier.padding(16.dp),
             )
-            Text(
-                stringResource(R.string.ui_jobs_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            JobsHeader(
+                count = jobs.size,
+                onOpenFolder = ::openFolder,
+                onDeleteAll = { showDeleteAll = true },
             )
             JobList(
                 jobs = jobs,
@@ -203,11 +202,38 @@ fun MainScreen(viewModel: MainViewModel) {
         )
     }
 
+    if (showHelp) {
+        ConnectHelpSheet(
+            address = status.addresses.firstOrNull(),
+            port = status.port,
+            compatibilityMode = config.compatibilityMode,
+            onDismiss = { showHelp = false },
+        )
+    }
+
+    if (showDeleteAll) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAll = false },
+            title = { Text(stringResource(R.string.ui_delete_all_title)) },
+            text = { Text(stringResource(R.string.ui_delete_all_message, jobs.size)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.deleteAll(); showDeleteAll = false }) {
+                    Text(stringResource(R.string.ui_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAll = false }) {
+                    Text(stringResource(R.string.ui_cancel))
+                }
+            },
+        )
+    }
+
     pendingDelete?.let { job ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
             title = { Text(stringResource(R.string.ui_delete_title)) },
-            text = { Text(stringResource(R.string.ui_delete_message, job.name)) },
+            text = { Text(stringResource(R.string.ui_delete_message, job.name.ifBlank { stringResource(R.string.ui_job_n, job.id) })) },
             confirmButton = {
                 TextButton(onClick = { viewModel.delete(job.id); pendingDelete = null }) {
                     Text(stringResource(R.string.ui_delete))
@@ -219,73 +245,5 @@ fun MainScreen(viewModel: MainViewModel) {
                 }
             },
         )
-    }
-}
-
-@Composable
-private fun StatusCard(
-    status: PrinterStatus,
-    config: PrinterConfig,
-    onToggle: (Boolean) -> Unit,
-    onCopy: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val stateText = when (status.state) {
-        ServiceState.STOPPED -> stringResource(R.string.ui_state_stopped)
-        ServiceState.STARTING -> stringResource(R.string.ui_state_starting)
-        ServiceState.RUNNING -> stringResource(R.string.ui_state_running)
-        ServiceState.ERROR -> status.error?.let { stringResource(R.string.ui_state_error, it) }
-            ?: stringResource(R.string.ui_state_error_unknown)
-    }
-    val checked = status.state == ServiceState.RUNNING || status.state == ServiceState.STARTING
-    Card(modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(config.name, style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        stateText,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (status.state == ServiceState.ERROR) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                    )
-                }
-                Switch(checked = checked, onCheckedChange = onToggle)
-            }
-            Text(
-                stringResource(
-                    R.string.ui_mode_line,
-                    stringResource(if (config.compatibilityMode) R.string.ui_mode_compat_short else R.string.ui_mode_pdf_short),
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (status.state == ServiceState.RUNNING) {
-                if (status.addresses.isEmpty()) {
-                    Text(stringResource(R.string.ui_no_addresses), style = MaterialTheme.typography.bodyMedium)
-                }
-                status.addresses.forEach { addr ->
-                    val url = "ipp://$addr:${status.port}${PrinterConfig.RESOURCE_PATH}"
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            url,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f),
-                        )
-                        IconButton(onClick = { onCopy(url) }) {
-                            Icon(Icons.Filled.ContentCopy, stringResource(R.string.ui_copy_address))
-                        }
-                    }
-                }
-                Text(
-                    stringResource(R.string.ui_hint_add_printer),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
     }
 }

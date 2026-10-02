@@ -1,6 +1,8 @@
 package com.rasa.printer.service
 
 import com.rasa.printer.printer.JobState
+import com.rasa.printer.printer.ConvertedDocument
+import com.rasa.printer.printer.DocumentConverter
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.file.Files
@@ -80,5 +82,35 @@ class FileJobStoreTest {
         val s = FileJobStore(dir)
         assertTrue(s.list().isEmpty())
         assertEquals(1, s.create("a", "u", "x").id)
+    }
+
+    @Test fun converterReplacesFile() {
+        val s = FileJobStore(dir, DocumentConverter { src, _, target ->
+            val out = target("pdf"); out.writeText("PDF"); ConvertedDocument(out, "application/pdf")
+        })
+        val j = s.create("a", "u", "image/urf")
+        val done = s.writeDocument(j.id, "image/urf", ByteArrayInputStream(byteArrayOf(1, 2, 3)))
+        assertEquals("application/pdf", done.format)
+        assertEquals("pdf", done.file!!.extension)
+        assertEquals(3L, done.sizeBytes)
+        assertFalse(File(dir, "${j.id}.urf").exists())
+        assertEquals(JobState.COMPLETED, done.state)
+    }
+
+    @Test fun converterNullKeepsOriginal() {
+        val s = FileJobStore(dir, DocumentConverter { _, _, _ -> null })
+        val j = s.create("a", "u", "image/urf")
+        val done = s.writeDocument(j.id, "image/urf", ByteArrayInputStream(byteArrayOf(1, 2)))
+        assertEquals("image/urf", done.format)
+        assertEquals("urf", done.file!!.extension)
+    }
+
+    @Test fun converterThrowKeepsOriginal() {
+        val s = FileJobStore(dir, DocumentConverter { _, _, _ -> throw IllegalStateException("boom") })
+        val j = s.create("a", "u", "image/urf")
+        val done = s.writeDocument(j.id, "image/urf", ByteArrayInputStream(byteArrayOf(1, 2)))
+        assertEquals(JobState.COMPLETED, done.state)
+        assertEquals("image/urf", done.format)
+        assertTrue(done.file!!.exists())
     }
 }

@@ -1,5 +1,6 @@
 package com.rasa.printer.service
 
+import com.rasa.printer.printer.DocumentConverter
 import com.rasa.printer.printer.JobState
 import com.rasa.printer.printer.JobStore
 import com.rasa.printer.printer.PrintJob
@@ -14,7 +15,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /** File-backed [JobStore]. Android-free so it can be unit tested on the JVM. */
-class FileJobStore(private val dir: File) : JobStore {
+class FileJobStore(
+    private val dir: File,
+    private val converter: DocumentConverter? = null,
+) : JobStore {
 
     @Serializable
     private data class JobDto(
@@ -82,11 +86,34 @@ class FileJobStore(private val dir: File) : JobStore {
                 }
                 if (target.exists() && !target.delete()) throw IOException("Cannot replace $target")
                 if (!tmp.renameTo(target)) throw IOException("Cannot rename $tmp")
-                val updated = existing.copy(
-                    format = format,
+            }
+            var finalFile = target
+            var finalFormat = format
+            var finalSize = size
+            if (converter != null) {
+                try {
+                    val result = converter.convert(target, format) { ext -> File(dir, "$jobId.$ext") }
+                    if (result != null) {
+                        finalFile = result.file
+                        finalFormat = result.format
+                        finalSize = result.file.length()
+                        if (result.file.canonicalPath != target.canonicalPath) target.delete()
+                    }
+                } catch (e: Exception) {
+                    log.log(Level.WARNING, "Conversion failed for job $jobId, keeping original", e)
+                }
+            }
+            synchronized(lock) {
+                val cur = byId[jobId]
+                if (cur == null) {
+                    finalFile.delete()
+                    throw IllegalArgumentException("Job deleted: $jobId")
+                }
+                val updated = cur.copy(
+                    format = finalFormat,
                     state = JobState.COMPLETED.ippValue,
-                    sizeBytes = size,
-                    fileName = fileName,
+                    sizeBytes = finalSize,
+                    fileName = finalFile.name,
                 )
                 byId[jobId] = updated
                 persist()

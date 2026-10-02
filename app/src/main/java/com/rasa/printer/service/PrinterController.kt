@@ -82,7 +82,7 @@ object PrinterController {
 
     /** Process-wide JobStore singleton (file-backed under context.filesDir/jobs). */
     fun jobStore(context: Context): JobStore = synchronized(lock) {
-        store ?: FileJobStore(File(context.applicationContext.filesDir, "jobs")).also { store = it }
+        store ?: FileJobStore(File(context.applicationContext.filesDir, "jobs"), RasterDocumentConverter(AndroidJpegEncoder)).also { store = it }
     }
 
     internal fun publishStatus(status: PrinterStatus) {

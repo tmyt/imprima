@@ -28,13 +28,14 @@ class IpptoolIntegrationTest {
     private lateinit var store: FileJobStore
     private lateinit var server: HttpServer
     private lateinit var uri: String
+    /** Read per request by the handler; the conformance suites need compatibility mode (URF/PWG attributes). */
+    @Volatile private var config = PrinterConfig(name = "Rasa Test Printer", port = 0, uuid = "12345678-1234-1234-1234-123456789abc", compatibilityMode = true)
 
     @Before
     fun setUp() {
         assumeTrue("ipptool not installed", ipptool.canExecute() && testDir != null)
         dir = createTempDir("rasa-ipptool")
         store = FileJobStore(dir)
-        val config = PrinterConfig(name = "Rasa Test Printer", port = 0, uuid = "12345678-1234-1234-1234-123456789abc")
         val handler = IppPrinterHandler({ config }, store)
         server = HttpServer(0, IppHttpHandler(handler, { config }, store) { null })
         server.start()
@@ -84,6 +85,19 @@ class IpptoolIntegrationTest {
         }
         assertEquals(expected.size.toLong(), job.file!!.length())
         assertTrue(expected.contentEquals(job.file!!.readBytes()))
+    }
+
+    @Test
+    fun pdfOnlyModeAttributesAndPrintJob() {
+        config = config.copy(compatibilityMode = false)
+        val pdf = File(testDir, "document-a4.pdf")
+        val (attrCode, attrOut) = run("-f", pdf.path, File(testDir, "get-printer-attributes.test").path)
+        assertEquals(attrOut, 0, attrCode)
+        val (code, out) = run("-f", pdf.path, File(testDir, "print-job.test").path)
+        assertEquals(out, 0, code)
+        val job = store.list().first()
+        assertEquals(JobState.COMPLETED, job.state)
+        assertEquals("application/pdf", job.format)
     }
 
     @Test

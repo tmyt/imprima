@@ -64,10 +64,10 @@ class IppPrinterHandler(
         if (op["printer-uri"]?.stringValue == null && op["job-uri"]?.stringValue == null) {
             throw IppError(IppStatus.CLIENT_ERROR_BAD_REQUEST, "Missing printer-uri")
         }
-        val ctx = Ctx(req, op, printerUri)
+        val ctx = Ctx(req, op, printerUri, config())
         return when (req.code) {
             IppOperation.GET_PRINTER_ATTRIBUTES -> getPrinterAttributes(ctx)
-            IppOperation.VALIDATE_JOB -> { checkCompression(op); declaredFormat(op); ok(req) }
+            IppOperation.VALIDATE_JOB -> { checkCompression(op); declaredFormat(ctx); ok(req) }
             IppOperation.PRINT_JOB -> printJob(ctx, document)
             IppOperation.CREATE_JOB -> createJob(ctx)
             IppOperation.SEND_DOCUMENT -> sendDocument(ctx, document)
@@ -81,7 +81,8 @@ class IppPrinterHandler(
         }
     }
 
-    private class Ctx(val req: IppMessage, val op: IppGroup, val printerUri: String) {
+    /** [config] is read once per request, so a mode switch applies from the next request on. */
+    private class Ctx(val req: IppMessage, val op: IppGroup, val printerUri: String, val config: PrinterConfig) {
         val userName: String get() = op["requesting-user-name"]?.stringValue?.takeIf { it.isNotBlank() } ?: "anonymous"
         val requested: List<String>? get() = op["requested-attributes"]?.stringValues?.takeIf { it.isNotEmpty() }
     }
@@ -91,7 +92,7 @@ class IppPrinterHandler(
     private fun getPrinterAttributes(ctx: Ctx): IppMessage {
         val now = clock()
         val queued = jobs.list().count { !it.state.isTerminal }
-        val all = PrinterAttributes.build(config(), ctx.printerUri, queued, upTime(now), now, startMillis)
+        val all = PrinterAttributes.build(ctx.config, ctx.printerUri, queued, upTime(now), now, startMillis)
         val requested = ctx.requested?.toSet()
         val selected = if (requested == null || "all" in requested) all else all.filter { a ->
             a.name in requested ||
@@ -111,22 +112,22 @@ class IppPrinterHandler(
 
     private fun printJob(ctx: Ctx, document: InputStream): IppMessage {
         checkCompression(ctx.op)
-        val declared = declaredFormat(ctx.op)
+        val declared = declaredFormat(ctx)
         val job = jobs.create(jobName(ctx.op), ctx.userName, declared ?: OCTET_STREAM)
-        val stored = store(job.id, declared, document)
+        val stored = store(ctx, job.id, declared, document)
         return ok(ctx.req, listOf(shortJobGroup(stored, ctx.printerUri)))
     }
 
     private fun createJob(ctx: Ctx): IppMessage {
         checkCompression(ctx.op)
-        val declared = declaredFormat(ctx.op)
+        val declared = declaredFormat(ctx)
         val job = jobs.create(jobName(ctx.op), ctx.userName, declared ?: OCTET_STREAM)
         return ok(ctx.req, listOf(shortJobGroup(job, ctx.printerUri)))
     }
 
     private fun sendDocument(ctx: Ctx, document: InputStream): IppMessage {
         checkCompression(ctx.op)
-        val declared = declaredFormat(ctx.op)
+        val declared = declaredFormat(ctx)
         if (ctx.op["last-document"]?.value !is IppValue.Bool) {
             throw IppError(IppStatus.CLIENT_ERROR_BAD_REQUEST, "Missing last-document")
         }
@@ -135,13 +136,13 @@ class IppPrinterHandler(
         val head = readHead(document)
         val result = if (head.isEmpty()) {
             if (job.file != null || job.state.isTerminal) job
-            else store(job.id, declared ?: job.format.takeIf { it != OCTET_STREAM }, ByteArrayInputStream(head))
+            else store(ctx, job.id, declared ?: job.format.takeIf { it != OCTET_STREAM }, ByteArrayInputStream(head))
         } else {
             if (job.state.isTerminal) {
                 throw IppError(IppStatus.CLIENT_ERROR_NOT_POSSIBLE, "Job ${job.id} is already ${job.state.name.lowercase()}")
             }
             val format = declared ?: job.format.takeIf { it != OCTET_STREAM }
-            store(job.id, format, SequenceInputStream(ByteArrayInputStream(head), document), head)
+            store(ctx, job.id, format, SequenceInputStream(ByteArrayInputStream(head), document), head)
         }
         return ok(ctx.req, listOf(shortJobGroup(result, ctx.printerUri)))
     }
@@ -220,11 +221,12 @@ class IppPrinterHandler(
     }
 
     /** Validated document-format, or null when absent / application/octet-stream (= sniff). */
-    private fun declaredFormat(op: IppGroup): String? {
-        val raw = op["document-format"]?.stringValue ?: return null
+    private fun declaredFormat(ctx: Ctx): String? {
+        val raw = ctx.op["document-format"]?.stringValue ?: return null
         val format = raw.substringBefore(';').trim().lowercase()
-        if (format !in PrinterAttributes.DOCUMENT_FORMATS) {
-            throw IppError(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, "Document format '$raw' not supported")
+        if (format !in PrinterAttributes.documentFormats(ctx.config)) {
+            val hint = if (ctx.config.compatibilityMode) "" else " (PDF-only mode)"
+            throw IppError(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, "Document format '$raw' not supported$hint")
         }
         return format.takeIf { it != OCTET_STREAM }
     }
@@ -232,13 +234,22 @@ class IppPrinterHandler(
     /**
      * Writes the document; sniffs the format from the first bytes when [format] is null.
      * [head] are bytes already read from [data] (data still yields them), if any.
+     * In PDF-only mode a sniffed non-PDF document is drained and discarded and the job ABORTED.
      */
-    private fun store(jobId: Int, format: String?, data: InputStream, head: ByteArray? = null): PrintJob {
+    private fun store(ctx: Ctx, jobId: Int, format: String?, data: InputStream, head: ByteArray? = null): PrintJob {
         var stream = data
         var actualFormat = format
         if (actualFormat == null) {
             val prefix = head ?: readHead(data).also { stream = SequenceInputStream(ByteArrayInputStream(it), data) }
             actualFormat = sniff(prefix)
+            if (!ctx.config.compatibilityMode && actualFormat != PrinterAttributes.PDF) {
+                drain(stream)
+                jobs.setState(jobId, JobState.ABORTED)
+                throw IppError(
+                    IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED,
+                    "Only PDF documents are accepted (PDF-only mode); received $actualFormat",
+                )
+            }
         }
         return try {
             jobs.writeDocument(jobId, actualFormat, stream)
@@ -246,6 +257,11 @@ class IppPrinterHandler(
             log.log(Level.WARNING, "Storing document for job $jobId failed", e)
             throw IppError(IppStatus.SERVER_ERROR_INTERNAL_ERROR, "Failed to store document: ${e.message}")
         }
+    }
+
+    private fun drain(input: InputStream) {
+        val buf = ByteArray(8192)
+        while (input.read(buf) >= 0) { /* discard */ }
     }
 
     /** Reads up to [SNIFF_BYTES] bytes (fewer only at EOF). */
@@ -358,7 +374,7 @@ class IppPrinterHandler(
 
     private companion object {
         val log: Logger = Logger.getLogger(IppPrinterHandler::class.java.name)
-        const val OCTET_STREAM = "application/octet-stream"
+        const val OCTET_STREAM = PrinterAttributes.OCTET_STREAM
         const val SNIFF_BYTES = 8
     }
 }

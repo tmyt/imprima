@@ -67,7 +67,7 @@ class IppHttpHandler(
             |<body>
             |<h1>${esc(cfg.name)}</h1>
             |<p>${esc(cfg.makeAndModel)}${if (cfg.location.isNotEmpty()) " &middot; " + esc(cfg.location) else ""}</p>
-            |<p>UUID: ${esc(cfg.uuid)}<br>Port: ${cfg.port}<br>IPP path: ${PrinterConfig.RESOURCE_PATH}<br>Jobs: ${list.size}</p>
+            |<p>UUID: ${esc(cfg.uuid)}<br>Port: ${cfg.port}<br>IPP path: ${PrinterConfig.RESOURCE_PATH}<br>Mode: ${if (cfg.compatibilityMode) "Compatibility (PDF, URF, PWG raster, JPEG, PNG)" else "PDF-only"}<br>Jobs: ${list.size}</p>
             |<table border="1" cellpadding="4">
             |<tr><th>ID</th><th>Name</th><th>User</th><th>Format</th><th>State</th><th>Bytes</th></tr>
             |$rows

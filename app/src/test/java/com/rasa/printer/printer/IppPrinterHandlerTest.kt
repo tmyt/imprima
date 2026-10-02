@@ -20,7 +20,8 @@ import org.junit.Test
 
 class IppPrinterHandlerTest {
     private val printerUri = "ipp://192.168.1.5:8631/ipp/print"
-    private val config = PrinterConfig(name = "Rasa Test", uuid = "1234-5678", location = "Desk")
+    /** Most tests exercise compatibility mode (all formats); PDF-only tests switch [config] at runtime. */
+    private var config = PrinterConfig(name = "Rasa Test", uuid = "1234-5678", location = "Desk", compatibilityMode = true)
     private var now = 1_700_000_000_000L
     private lateinit var store: InMemoryJobStore
     private lateinit var handler: IppPrinterHandler
@@ -494,6 +495,108 @@ class IppPrinterHandlerTest {
         assertEquals(true, (g["page-ranges-supported"]!!.value as IppValue.Bool).value)
         assertEquals((now / 1000).toInt(), g["printer-config-change-time"]?.intValue)
         assertEquals("http://192.168.1.5:8631/", g["printer-supply-info-uri"]?.stringValue)
+    }
+
+    // ---------------------------------------------------------------- PDF-only vs compatibility mode
+
+    private fun pdfOnly() { config = config.copy(compatibilityMode = false) }
+
+    @Test
+    fun pdfOnlyPrinterAttributes() {
+        pdfOnly()
+        val g = printerAttrs()
+        assertEquals(listOf("application/pdf", "application/octet-stream"), g["document-format-supported"]!!.stringValues)
+        assertEquals("application/pdf", g["document-format-default"]?.stringValue)
+        listOf("urf-supported", "pwg-raster-document-resolution-supported", "pwg-raster-document-type-supported", "pwg-raster-document-sheet-back")
+            .forEach { assertNull(it, g[it]) }
+        assertEquals("MFG:Rasa;MDL:Virtual Printer;CMD:PDF;CLS:PRINTER;", g["printer-device-id"]?.stringValue)
+        assertEquals(listOf("ipp-everywhere"), g["ipp-features-supported"]?.stringValues)
+        assertNotNull(g["media-col-database"])
+    }
+
+    @Test
+    fun pdfOnlyRejectsDeclaredRaster() {
+        pdfOnly()
+        val resp = send(request(IppOperation.PRINT_JOB, mime("image/urf")), body(bytes("UNIRAST\u0000data")))
+        assertEquals(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, resp.code)
+        assertTrue(store.list().isEmpty())
+        assertEquals(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, send(request(IppOperation.VALIDATE_JOB, mime("image/pwg-raster"))).code)
+        assertEquals(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, send(request(IppOperation.CREATE_JOB, mime("image/jpeg"))).code)
+        assertEquals(IppStatus.OK, send(request(IppOperation.VALIDATE_JOB, mime("application/pdf"))).code)
+    }
+
+    @Test
+    fun pdfOnlySniffedRasterIsAbortedAndDiscarded() {
+        pdfOnly()
+        val doc = ByteArrayInputStream(bytes("RaS2" + "x".repeat(50_000)))
+        val resp = send(request(IppOperation.PRINT_JOB, mime("application/octet-stream")), doc)
+        assertEquals(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, resp.code)
+        assertTrue(resp.operationAttributes!!["status-message"]!!.stringValue!!.contains("PDF-only"))
+        assertEquals(0, doc.available()) // the rest of the body was consumed
+        val job = store.list().single()
+        assertEquals(JobState.ABORTED, job.state)
+        assertNull(job.file)
+        assertNull(store.document(job.id))
+    }
+
+    @Test
+    fun pdfOnlySendDocumentSniffedNonPdf() {
+        pdfOnly()
+        val id = createJob()
+        val resp = send(request(IppOperation.SEND_DOCUMENT, jobId(id), lastDoc(true)), body(bytes("\u0089PNG\r\n\u001a\n")))
+        assertEquals(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, resp.code)
+        assertEquals(JobState.ABORTED, store.get(id)!!.state)
+        assertNull(store.get(id)!!.file)
+    }
+
+    @Test
+    fun pdfOnlyAcceptsPdfDeclaredOrSniffed() {
+        pdfOnly()
+        val doc = bytes("%PDF-1.7 body")
+        assertEquals(IppStatus.OK, send(request(IppOperation.PRINT_JOB, mime("application/pdf")), body(doc)).code)
+        assertEquals(IppStatus.OK, send(request(IppOperation.PRINT_JOB, mime("application/octet-stream")), body(doc)).code)
+        assertEquals(IppStatus.OK, send(request(IppOperation.PRINT_JOB), body(doc)).code)
+        assertEquals(listOf(JobState.COMPLETED), store.list().map { it.state }.distinct())
+        assertEquals(listOf("application/pdf"), store.list().map { it.format }.distinct())
+        assertArrayEquals(doc, store.document(3))
+    }
+
+    @Test
+    fun compatibilityModeAcceptsRasterAndAdvertisesIt() {
+        val doc = bytes("UNIRAST\u0000urf")
+        assertEquals(IppStatus.OK, send(request(IppOperation.PRINT_JOB, mime("image/urf")), body(doc)).code)
+        assertEquals("image/urf", store.get(1)!!.format)
+        assertArrayEquals(doc, store.document(1))
+        val g = printerAttrs()
+        assertNotNull(g["urf-supported"])
+        assertEquals("MFG:Rasa;MDL:Virtual Printer;CMD:PDF,PWGRaster,URF;CLS:PRINTER;", g["printer-device-id"]?.stringValue)
+    }
+
+    @Test
+    fun modeSwitchTakesEffectPerRequest() {
+        assertEquals(IppStatus.OK, send(request(IppOperation.VALIDATE_JOB, mime("image/urf"))).code)
+        pdfOnly()
+        assertEquals(IppStatus.CLIENT_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED, send(request(IppOperation.VALIDATE_JOB, mime("image/urf"))).code)
+        assertNull(printerAttrs()["urf-supported"])
+    }
+
+    @Test
+    fun bonjourTxtRecords() {
+        val compat = PrinterAttributes.bonjourTxt(config)
+        assertEquals("application/pdf,image/pwg-raster,image/urf,image/jpeg,image/png", compat["pdl"])
+        assertEquals("V1.4,W8,SRGB24,CP1,RS300-600,IS1,MT1-2-3,OB9,PQ3-4-5,DM1", compat["URF"])
+        assertEquals("ipp/print", compat["rp"])
+        assertEquals("(Rasa Virtual Printer)", compat["product"])
+        assertEquals("Rasa Test", compat["ty"])
+        assertEquals("1234-5678", compat["UUID"])
+        assertEquals("Desk", compat["note"])
+        listOf("txtvers" to "1", "qtotal" to "1", "Color" to "T", "Duplex" to "F", "Scan" to "F", "Fax" to "F", "kind" to "document", "priority" to "0")
+            .forEach { (k, v) -> assertEquals(k, v, compat[k]) }
+
+        val pdf = PrinterAttributes.bonjourTxt(config.copy(compatibilityMode = false, location = ""))
+        assertEquals("application/pdf", pdf["pdl"])
+        assertNull(pdf["URF"])
+        assertNull(pdf["note"])
     }
 
     @Test

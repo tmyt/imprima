@@ -18,10 +18,39 @@ object PrinterAttributes {
     /** Cancel-My-Jobs (PWG 5100.11); not among the frozen IppOperation constants. */
     const val CANCEL_MY_JOBS = 0x0039
 
-    /** Document formats accepted by Print-Job / Send-Document. */
-    val DOCUMENT_FORMATS: List<String> = listOf(
-        "application/pdf", "image/pwg-raster", "image/urf", "image/jpeg", "image/png", "application/octet-stream",
-    )
+    const val PDF = "application/pdf"
+    const val OCTET_STREAM = "application/octet-stream"
+
+    /** Every format the compatibility mode accepts (octet-stream = "sniff it"). */
+    val DOCUMENT_FORMATS_ALL: List<String> = listOf(PDF, "image/pwg-raster", "image/urf", "image/jpeg", "image/png", OCTET_STREAM)
+
+    /** PDF-only mode: octet-stream is only a transport type whose content must sniff to PDF. */
+    val DOCUMENT_FORMATS_PDF_ONLY: List<String> = listOf(PDF, OCTET_STREAM)
+
+    /** Document formats accepted by Print-Job / Send-Document / Validate-Job for [config]. */
+    fun documentFormats(config: PrinterConfig): List<String> =
+        if (config.compatibilityMode) DOCUMENT_FORMATS_ALL else DOCUMENT_FORMATS_PDF_ONLY
+
+    private val URF_SUPPORTED = listOf("V1.4", "W8", "SRGB24", "CP1", "RS300-600", "IS1", "MT1-2-3", "OB9", "PQ3-4-5", "DM1")
+
+    /** DNS-SD TXT record for _ipp._tcp (Bonjour Printing Specification / IPP Everywhere). */
+    fun bonjourTxt(config: PrinterConfig): Map<String, String> = buildMap {
+        put("txtvers", "1")
+        put("qtotal", "1")
+        put("rp", PrinterConfig.RESOURCE_PATH.removePrefix("/"))
+        put("ty", config.name)
+        put("product", "(${config.makeAndModel})")
+        put("pdl", documentFormats(config).filter { it != OCTET_STREAM }.joinToString(","))
+        if (config.compatibilityMode) put("URF", URF_SUPPORTED.joinToString(","))
+        put("Color", "T")
+        put("Duplex", "F")
+        put("Scan", "F")
+        put("Fax", "F")
+        put("kind", "document")
+        put("UUID", config.uuid)
+        put("priority", "0")
+        if (config.location.isNotEmpty()) put("note", config.location)
+    }
 
     val OPERATIONS: List<Int> = listOf(
         IppOperation.PRINT_JOB, IppOperation.VALIDATE_JOB, IppOperation.CREATE_JOB, IppOperation.SEND_DOCUMENT,
@@ -68,8 +97,9 @@ object PrinterAttributes {
         return base in TEMPLATE_BASES && suffix in setOf("default", "supported", "ready")
     }
 
+    /** Superset of names (compatibility mode advertises everything PDF-only mode does, plus raster). */
     private fun allNames(): List<String> =
-        build(PrinterConfig(name = "x", uuid = "x"), "ipp://localhost:${PrinterConfig.DEFAULT_PORT}${PrinterConfig.RESOURCE_PATH}", 0, 1, 0L, 0L)
+        build(PrinterConfig(name = "x", uuid = "x", compatibilityMode = true), "ipp://localhost:${PrinterConfig.DEFAULT_PORT}${PrinterConfig.RESOURCE_PATH}", 0, 1, 0L, 0L)
             .map { it.name }
 
     fun build(
@@ -83,6 +113,7 @@ object PrinterAttributes {
     ): List<IppAttribute> {
         val changeSeconds = maxOf(0L, changeMillis / 1000).toInt()
         val httpBase = httpBase(printerUri, config.port)
+        val compat = config.compatibilityMode
         return Catalogue().apply {
             // --- charset / language / protocol
             add("charset-configured", IppValue.Charset("utf-8"))
@@ -102,7 +133,7 @@ object PrinterAttributes {
             text("printer-location", config.location)
             text("printer-make-and-model", config.makeAndModel)
             add("printer-uuid", IppValue.Uri("urn:uuid:" + config.uuid))
-            text("printer-device-id", "MFG:Rasa;MDL:Virtual Printer;CMD:PDF,PWGRaster,URF;CLS:PRINTER;")
+            text("printer-device-id", "MFG:Rasa;MDL:Virtual Printer;CMD:${if (compat) "PDF,PWGRaster,URF" else "PDF"};CLS:PRINTER;")
             add("printer-more-info", IppValue.Uri("$httpBase/"))
             add("printer-icons", IppValue.Uri("$httpBase/icon.png"))
             add("printer-geo-location", IppValue.OutOfBand(IppTag.UNKNOWN))
@@ -129,8 +160,8 @@ object PrinterAttributes {
             ints("pages-per-minute-color", 10)
 
             // --- document handling
-            add("document-format-default", IppValue.MimeMediaType("application/pdf"))
-            add("document-format-supported", DOCUMENT_FORMATS.map { IppValue.MimeMediaType(it) })
+            add("document-format-default", IppValue.MimeMediaType(PDF))
+            add("document-format-supported", documentFormats(config).map { IppValue.MimeMediaType(it) })
             kw("compression-supported", "none")
             kw("pdl-override-supported", "attempted")
             bool("multiple-document-jobs-supported", false)
@@ -154,11 +185,13 @@ object PrinterAttributes {
             kw("identify-actions-default", "display")
             kw("identify-actions-supported", "display", "sound")
 
-            // --- raster formats
-            add("pwg-raster-document-resolution-supported", RES_300, RES_600)
-            kw("pwg-raster-document-type-supported", "black_1", "sgray_8", "srgb_8")
-            kw("pwg-raster-document-sheet-back", "normal")
-            kw("urf-supported", "V1.4", "W8", "SRGB24", "CP1", "RS300-600", "IS1", "MT1-2-3", "OB9", "PQ3-4-5", "DM1")
+            // --- raster formats (compatibility mode only; their absence keeps iOS from listing a PDF-only printer)
+            if (compat) {
+                add("pwg-raster-document-resolution-supported", RES_300, RES_600)
+                kw("pwg-raster-document-type-supported", "black_1", "sgray_8", "srgb_8")
+                kw("pwg-raster-document-sheet-back", "normal")
+                kw("urf-supported", *URF_SUPPORTED.toTypedArray())
+            }
 
             // --- job template
             ints("copies-default", 1)

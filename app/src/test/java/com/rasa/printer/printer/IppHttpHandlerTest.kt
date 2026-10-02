@@ -17,7 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class IppHttpHandlerTest {
-    private var cfg = PrinterConfig(name = "Rasa <Office>", uuid = "abcd-ef")
+    private var cfg = PrinterConfig(name = "Rasa <Office>", uuid = "abcd-ef", compatibilityMode = true)
     private val store = InMemoryJobStore()
     private var icon: ByteArray? = null
     private val http = IppHttpHandler(IppPrinterHandler({ cfg }, store), { cfg }, store, { icon })
@@ -56,6 +56,9 @@ class IppHttpHandlerTest {
         assertTrue(html.contains("Rasa &lt;Office&gt;"))
         assertTrue(html.contains("abcd-ef"))
         assertFalse(html.contains("<script>"))
+        assertTrue(html.contains("Compatibility"))
+        cfg = cfg.copy(compatibilityMode = false)
+        assertTrue(http.handle(req("GET", "/")).body.toString(Charsets.UTF_8).contains("PDF-only"))
     }
 
     @Test

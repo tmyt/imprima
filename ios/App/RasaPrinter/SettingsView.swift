@@ -42,12 +42,8 @@ struct SettingsView: View {
                     }
                     ForEach(service.addresses, id: \.self) { addr in
                         HStack {
-                            Text(addr).font(.body.monospaced()).textSelection(.enabled)
+                            Text(addr).font(.body.monospaced())
                             Text(": \(String(service.config.port))").foregroundStyle(.secondary)
-                            Spacer()
-                            Button { UIPasteboard.general.string = addr } label: { Image(systemName: "doc.on.doc") }
-                                .buttonStyle(.borderless)
-                                .accessibilityLabel("Copy \(addr)")
                         }
                     }
                 }

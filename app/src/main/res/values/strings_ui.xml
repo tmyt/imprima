@@ -10,8 +10,6 @@
     <string name="ui_state_error_unknown">Error</string>
     <string name="ui_toggle_printer">Printer service</string>
     <string name="ui_hint_add_printer">Add this printer on your computer as an IPP Everywhere / driverless printer, or pick it from the network printer list.</string>
-    <string name="ui_copy_address">Copy</string>
-    <string name="ui_copied">Address copied</string>
     <string name="ui_jobs_title">Print jobs</string>
     <string name="ui_jobs_empty">No print jobs yet. Documents sent to this printer will appear here. They are also saved to Documents/Rasa Printer.</string>
     <string name="ui_job_by">%1$s · %2$s</string>

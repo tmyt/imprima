@@ -2,8 +2,6 @@ package com.rasa.printer.ui
 
 import android.Manifest
 import android.content.ActivityNotFoundException
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -72,7 +69,6 @@ fun MainScreen(viewModel: MainViewModel) {
 
     val noApp = stringResource(R.string.ui_no_app_to_open)
     val noFile = stringResource(R.string.ui_no_file)
-    val copiedMsg = stringResource(R.string.ui_copied)
 
     // Start regardless of the permission result; the service works without a visible notification.
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -131,14 +127,6 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
-    fun copyText(text: String) {
-        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("printer address", text))
-        // Android 13+ shows its own confirmation.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            scope.launch { snackbar.showSnackbar(copiedMsg) }
-        }
-    }
 
     val noFileManager = stringResource(R.string.ui_no_file_manager)
     fun openFolder() {
@@ -200,7 +188,6 @@ fun MainScreen(viewModel: MainViewModel) {
             config = config,
             addresses = status.addresses,
             port = status.port,
-            onCopy = ::copyText,
             onDismiss = { showSettings = false },
             onSave = { viewModel.save(it); showSettings = false },
         )

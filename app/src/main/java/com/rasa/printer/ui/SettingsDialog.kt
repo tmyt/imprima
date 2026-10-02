@@ -24,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.font.FontFamily
@@ -40,7 +39,6 @@ fun SettingsDialog(
     config: PrinterConfig,
     addresses: List<String>,
     port: Int,
-    onCopy: (String) -> Unit,
     onDismiss: () -> Unit,
     onSave: (PrinterConfig) -> Unit,
 ) {
@@ -115,17 +113,12 @@ fun SettingsDialog(
                     )
                 }
                 addresses.forEach { addr ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "$addr : $port",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.weight(1f),
-                        )
-                        IconButton(onClick = { onCopy(addr) }) {
-                            Icon(Icons.Filled.ContentCopy, stringResource(R.string.ui_copy_address))
-                        }
-                    }
+                    Text(
+                        "$addr : $port",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    )
                 }
                 SectionLabel(R.string.ui_section_mode)
                 Column(Modifier.selectableGroup()) {

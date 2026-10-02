@@ -9,10 +9,27 @@ public struct PrinterConfig: Equatable, Codable {
     public var uuid: String
     public var location: String
     public var makeAndModel: String
+    /// false (default): PDF-only mode — only application/pdf is accepted; no URF/PWG advertised (iOS AirPrint
+    /// does not list the printer; macOS/CUPS send PDF). true: high-compatibility mode — also accepts
+    /// image/urf, image/pwg-raster, image/jpeg, image/png (raster converted to PDF) and advertises AirPrint.
+    public var compatibilityMode: Bool
     public static let defaultPort: UInt16 = 8631
     public static let resourcePath = "/ipp/print"
-    public init(name: String, port: UInt16 = PrinterConfig.defaultPort, uuid: String, location: String = "", makeAndModel: String = "Rasa Virtual Printer") {
+    public init(name: String, port: UInt16 = PrinterConfig.defaultPort, uuid: String, location: String = "", makeAndModel: String = "Rasa Virtual Printer", compatibilityMode: Bool = false) {
         self.name = name; self.port = port; self.uuid = uuid; self.location = location; self.makeAndModel = makeAndModel
+        self.compatibilityMode = compatibilityMode
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, port, uuid, location, makeAndModel, compatibilityMode }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        port = try c.decodeIfPresent(UInt16.self, forKey: .port) ?? PrinterConfig.defaultPort
+        uuid = try c.decode(String.self, forKey: .uuid)
+        location = try c.decodeIfPresent(String.self, forKey: .location) ?? ""
+        makeAndModel = try c.decodeIfPresent(String.self, forKey: .makeAndModel) ?? "Rasa Virtual Printer"
+        compatibilityMode = try c.decodeIfPresent(Bool.self, forKey: .compatibilityMode) ?? false
     }
 }
 

@@ -5,11 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -17,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rasa.printer.R
@@ -30,15 +25,14 @@ fun StatusCard(
     status: PrinterStatus,
     config: PrinterConfig,
     onToggle: (Boolean) -> Unit,
-    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val mode = stringResource(
         if (config.compatibilityMode) R.string.ui_mode_compat_short else R.string.ui_mode_pdf_short,
     )
     val summary = when (status.state) {
-        ServiceState.RUNNING -> stringResource(R.string.ui_summary_running, status.port, mode)
-        ServiceState.STARTING -> stringResource(R.string.ui_summary_starting, mode)
+        ServiceState.RUNNING -> stringResource(R.string.ui_summary_running, mode)
+        ServiceState.STARTING -> stringResource(R.string.ui_state_starting)
         else -> stringResource(R.string.ui_summary_stopped, mode)
     }
     val checked = status.state == ServiceState.RUNNING || status.state == ServiceState.STARTING
@@ -65,34 +59,6 @@ fun StatusCard(
                         ?: stringResource(R.string.ui_state_error_unknown),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
-                )
-            }
-            if (status.state == ServiceState.RUNNING) {
-                if (status.addresses.isEmpty()) {
-                    Text(stringResource(R.string.ui_no_addresses), style = MaterialTheme.typography.bodySmall)
-                }
-                status.addresses.forEach { addr ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            addr,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontFamily = FontFamily.Monospace,
-                        )
-                        Text(
-                            " : ${status.port}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f),
-                        )
-                        IconButton(onClick = { onCopy(addr) }) {
-                            Icon(Icons.Filled.ContentCopy, stringResource(R.string.ui_copy_address))
-                        }
-                    }
-                }
-                Text(
-                    stringResource(R.string.ui_discovery_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

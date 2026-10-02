@@ -179,7 +179,6 @@ fun MainScreen(viewModel: MainViewModel) {
                 status = status,
                 config = config,
                 onToggle = ::onToggle,
-                onCopy = ::copyText,
                 modifier = Modifier.padding(16.dp),
             )
             JobsHeader(
@@ -199,6 +198,9 @@ fun MainScreen(viewModel: MainViewModel) {
     if (showSettings) {
         SettingsDialog(
             config = config,
+            addresses = status.addresses,
+            port = status.port,
+            onCopy = ::copyText,
             onDismiss = { showSettings = false },
             onSave = { viewModel.save(it); showSettings = false },
         )

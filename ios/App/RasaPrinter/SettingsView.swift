@@ -33,7 +33,7 @@ struct SettingsView: View {
                 Section {
                     TextField("Port", text: $portText).keyboardType(.numberPad)
                 } header: { Text("Network") } footer: {
-                    Text(port == nil ? "Enter a port from 1024 to 65535." : "Ports below 1024 need root privileges, so they are not allowed. Default is 8631.")
+                    Text(port == nil ? "Enter a port from 1024 to 65535." : "Port must be 1024 or higher. Default is 8631.")
                         .foregroundStyle(port == nil ? Color.red : Color.secondary)
                 }
                 Section("Current addresses") {

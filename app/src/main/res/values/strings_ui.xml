@@ -40,8 +40,8 @@
     <string name="ui_field_name">Name</string>
     <string name="ui_field_name_error">Name must not be empty</string>
     <string name="ui_field_port">Port</string>
-    <string name="ui_field_port_support">Ports below 1024 need root and are not available</string>
-    <string name="ui_field_port_error">Enter a port between 1024 and 65535. Ports below 1024 need root and are not available.</string>
+    <string name="ui_field_port_support">Port must be 1024 or higher. Default is 8631.</string>
+    <string name="ui_field_port_error">Enter a port from 1024 to 65535.</string>
     <string name="ui_field_location">Location</string>
     <string name="ui_field_uuid">UUID</string>
     <string name="ui_job_saved_in">Saved in Documents/Rasa Printer</string>

@@ -43,8 +43,17 @@ Identify-Printer.
 - **iOS**: Share → Print (requires Android 13+ on the printer side for the `_universal`
   subtype that AirPrint discovery relies on).
 
+## Raster → PDF conversion
+
+AirPrint clients (iOS, macOS) usually send pages pre-rendered as Apple URF or PWG Raster.
+Those are unreadable on their own, so the app decodes them on the device (`raster/`
+package: RLE decoder for both formats, dependency-free PDF writer) and stores a PDF
+instead: colour/grey pages are embedded as JPEG, monochrome pages as 1-bit Flate images.
+The page size follows the raster resolution (e.g. 2479×3508 px @ 300 dpi → A4).
+
 ## Limitations
 
-- Documents are stored as received; there is no rasterisation or page rendering.
+- PDF, JPEG and PNG documents are stored as received (no re-rendering); raster
+  documents are converted to image-only PDFs (no text layer).
 - One document per job (`multiple-document-jobs-supported = false`).
 - No TLS (`ipps://`); use on trusted networks only.

@@ -3,7 +3,8 @@ import XCTest
 
 final class IppPrinterHandlerTests: XCTestCase {
     private let printerUri = "ipp://192.168.1.5:8631/ipp/print"
-    private let config = PrinterConfig(name: "Rasa Test", uuid: "1234-5678", location: "Desk")
+    /// The ported Kotlin cases exercise compatibility mode (raster sniffing etc.); PDF-only tests flip it.
+    private var config = PrinterConfig(name: "Rasa Test", uuid: "1234-5678", location: "Desk", compatibilityMode: true)
     private var now = Date(timeIntervalSince1970: 1_700_000_000)
     private var store: InMemoryJobStore!
     private var handler: IppPrinterHandler!
@@ -12,8 +13,7 @@ final class IppPrinterHandlerTests: XCTestCase {
     override func setUp() {
         super.setUp()
         store = InMemoryJobStore(clock: { [unowned self] in self.now })
-        let cfg = config
-        handler = IppPrinterHandler(config: { cfg }, jobs: store, clock: { [unowned self] in self.now })
+        handler = IppPrinterHandler(config: { [unowned self] in self.config }, jobs: store, clock: { [unowned self] in self.now })
     }
 
     // MARK: - helpers
@@ -503,6 +503,129 @@ final class IppPrinterHandlerTests: XCTestCase {
         XCTAssertEqual("0", txt["priority"])
         XCTAssertEqual("Desk", txt["note"])
         XCTAssertNil(PrinterAttributes.bonjourTxt(config: PrinterConfig(name: "x", uuid: "y"))["note"])
+    }
+
+    // MARK: - PDF-only mode (compatibilityMode == false)
+
+    private func pdfOnly() { config.compatibilityMode = false }
+
+    func testPdfOnlyIsTheDefault() {
+        XCTAssertFalse(PrinterConfig(name: "x", uuid: "y").compatibilityMode)
+    }
+
+    func testPdfOnlyDocumentFormats() {
+        XCTAssertEqual(["application/pdf", "application/octet-stream"],
+                       PrinterAttributes.documentFormats(config: PrinterConfig(name: "x", uuid: "y")))
+        XCTAssertEqual(["application/pdf", "image/pwg-raster", "image/urf", "image/jpeg", "image/png", "application/octet-stream"],
+                       PrinterAttributes.documentFormats(config: PrinterConfig(name: "x", uuid: "y", compatibilityMode: true)))
+    }
+
+    func testPdfOnlyPrinterAttributes() throws {
+        pdfOnly()
+        let g = try printerAttrs()
+        XCTAssertEqual(["application/pdf", "application/octet-stream"], g["document-format-supported"]?.stringValues)
+        XCTAssertEqual("MFG:Rasa;MDL:Virtual Printer;CMD:PDF;CLS:PRINTER;", g["printer-device-id"]?.stringValue)
+        for name in ["urf-supported", "pwg-raster-document-resolution-supported", "pwg-raster-document-type-supported",
+                     "pwg-raster-document-sheet-back"] {
+            XCTAssertNil(g[name], name)
+        }
+        // everything else unchanged
+        XCTAssertNotNil(g["media-col-database"])
+        XCTAssertEqual("application/pdf", g["document-format-default"]?.stringValue)
+        let names = g.attributes.map { $0.name }
+        XCTAssertEqual(names.count, Set(names).count)
+    }
+
+    func testCompatPrinterAttributes() throws {
+        let g = try printerAttrs("printer-description")
+        XCTAssertEqual("MFG:Rasa;MDL:Virtual Printer;CMD:PDF,PWGRaster,URF;CLS:PRINTER;", g["printer-device-id"]?.stringValue)
+        XCTAssertEqual(PrinterAttributes.documentFormats(config: config), g["document-format-supported"]?.stringValues)
+        for name in ["urf-supported", "pwg-raster-document-resolution-supported", "pwg-raster-document-type-supported",
+                     "pwg-raster-document-sheet-back"] {
+            XCTAssertNotNil(g[name], name) // still part of the printer-description group
+        }
+    }
+
+    func testPdfOnlyRejectsDeclaredUrf() {
+        pdfOnly()
+        let resp = send(request(IppOperation.printJob, mime("image/urf")), body(bytes("UNIRAST\u{0000}xyz")))
+        XCTAssertEqual(IppStatus.clientErrorDocumentFormatNotSupported, resp.code)
+        XCTAssertTrue(store.list().isEmpty)
+        XCTAssertEqual(IppStatus.clientErrorDocumentFormatNotSupported, send(request(IppOperation.validateJob, mime("image/urf"))).code)
+        XCTAssertEqual(IppStatus.clientErrorDocumentFormatNotSupported, send(request(IppOperation.createJob, mime("image/pwg-raster"))).code)
+        XCTAssertEqual(IppStatus.ok, send(request(IppOperation.validateJob, mime("application/pdf"))).code)
+        XCTAssertEqual(IppStatus.ok, send(request(IppOperation.validateJob, mime("application/octet-stream"))).code)
+        XCTAssertTrue(store.list().isEmpty)
+    }
+
+    func testPdfOnlySniffedRasterIsAbortedWithoutFile() throws {
+        pdfOnly()
+        final class CountingStream: ByteInputStream {
+            let inner: DataInputStream
+            init(_ d: Data) { inner = DataInputStream(d) }
+            var remaining: Int { inner.remaining }
+            func read(into buffer: UnsafeMutablePointer<UInt8>, maxLength: Int) throws -> Int { try inner.read(into: buffer, maxLength: maxLength) }
+        }
+        let doc = CountingStream(bytes("RaS2PwgRaster" + String(repeating: "x", count: 200_000)))
+        let resp = send(request(IppOperation.printJob), doc)
+        XCTAssertEqual(IppStatus.clientErrorDocumentFormatNotSupported, resp.code)
+        XCTAssertEqual("Only PDF documents are accepted (PDF-only mode)", resp.operationAttributes?["status-message"]?.stringValue)
+        XCTAssertEqual(0, doc.remaining) // rest of the document read and discarded
+        let job = try XCTUnwrap(store.get(1))
+        XCTAssertEqual(.aborted, job.state)
+        XCTAssertNil(job.fileURL)
+        XCTAssertNil(store.document(1))
+
+        // declared octet-stream is only a transport type
+        let octet = send(request(IppOperation.printJob, mime("application/octet-stream")), body(Data([0xFF, 0xD8, 0xFF])))
+        XCTAssertEqual(IppStatus.clientErrorDocumentFormatNotSupported, octet.code)
+        XCTAssertEqual(.aborted, store.get(2)?.state)
+        XCTAssertNil(store.get(2)?.fileURL)
+    }
+
+    func testPdfOnlySendDocumentSniffedNonPdf() throws {
+        pdfOnly()
+        let id = try createJob()
+        let resp = send(request(IppOperation.sendDocument, jobId(id), lastDoc(true)), body(bytes("UNIRAST\u{0000}abc")))
+        XCTAssertEqual(IppStatus.clientErrorDocumentFormatNotSupported, resp.code)
+        XCTAssertEqual("Only PDF documents are accepted (PDF-only mode)", resp.operationAttributes?["status-message"]?.stringValue)
+        XCTAssertEqual(.aborted, store.get(id)?.state)
+        XCTAssertNil(store.get(id)?.fileURL)
+    }
+
+    func testPdfOnlyAcceptsPdf() throws {
+        pdfOnly()
+        let declared = bytes("%PDF-1.4 declared")
+        XCTAssertEqual(IppStatus.ok, send(request(IppOperation.printJob, mime("application/pdf")), body(declared)).code)
+        XCTAssertEqual(declared, store.document(1))
+        let sniffed = bytes("%PDF-1.7 sniffed")
+        XCTAssertEqual(IppStatus.ok, send(request(IppOperation.printJob, mime("application/octet-stream")), body(sniffed)).code)
+        XCTAssertEqual("application/pdf", store.get(2)?.format)
+        XCTAssertEqual(sniffed, store.document(2))
+        let id = try createJob()
+        XCTAssertEqual(IppStatus.ok, send(request(IppOperation.sendDocument, jobId(id), lastDoc(true)), body(sniffed)).code)
+        XCTAssertEqual(.completed, store.get(id)?.state)
+        XCTAssertEqual(sniffed, store.document(id))
+    }
+
+    func testModeChangeAppliesPerRequest() throws {
+        XCTAssertEqual(IppStatus.ok, send(request(IppOperation.printJob), body(bytes("RaS2 raster"))).code)
+        pdfOnly()
+        XCTAssertNil(try printerAttrs()["urf-supported"])
+        XCTAssertEqual(IppStatus.clientErrorDocumentFormatNotSupported, send(request(IppOperation.printJob), body(bytes("RaS2 raster"))).code)
+        config.compatibilityMode = true
+        XCTAssertNotNil(try printerAttrs()["urf-supported"])
+        XCTAssertEqual(IppStatus.ok, send(request(IppOperation.printJob, mime("image/urf")), body(bytes("UNIRAST"))).code)
+    }
+
+    func testBonjourTxtPdfOnly() {
+        var c = config
+        c.compatibilityMode = false
+        let txt = PrinterAttributes.bonjourTxt(config: c)
+        XCTAssertEqual("application/pdf", txt["pdl"])
+        XCTAssertNil(txt["URF"])
+        XCTAssertEqual("ipp/print", txt["rp"])
+        XCTAssertEqual("1234-5678", txt["UUID"])
     }
 
     func testDateTimeEncoding() {

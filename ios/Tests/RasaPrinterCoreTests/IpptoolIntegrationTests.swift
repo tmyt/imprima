@@ -19,7 +19,11 @@ final class IpptoolIntegrationTests: XCTestCase {
         root = fm.temporaryDirectory.appendingPathComponent("rasa-ipptool-\(UUID().uuidString)")
         store = FileJobStore(documentsDirectory: root.appendingPathComponent("Documents"),
                              metadataURL: root.appendingPathComponent("jobs.json"))
-        let config = PrinterConfig(name: "Rasa Test Printer", port: 0, uuid: "12345678-1234-1234-1234-123456789abc")
+    }
+
+    private func startServer(compatibilityMode: Bool) throws {
+        let config = PrinterConfig(name: "Rasa Test Printer", port: 0, uuid: "12345678-1234-1234-1234-123456789abc",
+                                   compatibilityMode: compatibilityMode)
         let handler = IppPrinterHandler(config: { config }, jobs: store)
         let http = IppHttpHandler(handler: handler, config: { config }, jobs: store, iconPng: { nil })
         server = HttpServer(port: 0, handler: { http.handle($0) })
@@ -64,16 +68,41 @@ final class IpptoolIntegrationTests: XCTestCase {
     }
 
     func testGetPrinterAttributes() throws {
+        try startServer(compatibilityMode: true)
         let (code, out) = try run("get-printer-attributes.test")
         XCTAssertEqual(0, code, out)
     }
 
+    /// ipp-everywhere.test requires the raster formats, so it runs in compatibility mode.
     func testIppEverywhereConformance() throws {
+        try startServer(compatibilityMode: true)
         let (code, out) = try run("ipp-everywhere.test")
         XCTAssertEqual(0, code, out)
     }
 
     func testPrintJobStoresPdf() throws {
+        try startServer(compatibilityMode: true)
+        try assertPrintJobStoresPdf()
+    }
+
+    func testPdfOnlyGetPrinterAttributes() throws {
+        try startServer(compatibilityMode: false)
+        let (code, out) = try run("get-printer-attributes.test")
+        XCTAssertEqual(0, code, out)
+    }
+
+    func testPdfOnlyPrintJobStoresPdf() throws {
+        try startServer(compatibilityMode: false)
+        try assertPrintJobStoresPdf()
+    }
+
+    func testPdfOnlyIpp11Conformance() throws {
+        try startServer(compatibilityMode: false)
+        let (code, out) = try run("ipp-1.1.test")
+        XCTAssertEqual(0, code, out)
+    }
+
+    private func assertPrintJobStoresPdf(file: StaticString = #filePath, line: UInt = #line) throws {
         let (code, out) = try run("print-job.test")
         XCTAssertEqual(0, code, out)
         let job = try XCTUnwrap(store.list().first)
@@ -89,6 +118,7 @@ final class IpptoolIntegrationTests: XCTestCase {
     }
 
     func testIpp11Conformance() throws {
+        try startServer(compatibilityMode: true)
         let (code, out) = try run("ipp-1.1.test")
         XCTAssertEqual(0, code, out)
     }

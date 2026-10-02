@@ -12,6 +12,8 @@ public final class IppPrinterHandler {
     static let log = Logger(subsystem: "com.rasa.printer", category: "IppPrinterHandler")
     static let octetStream = "application/octet-stream"
     static let sniffBytes = 8
+    static let pdf = "application/pdf"
+    static let pdfOnlyMessage = "Only PDF documents are accepted (PDF-only mode)"
 
     public init(config: @escaping () -> PrinterConfig, jobs: JobStore, clock: @escaping () -> Date = { Date() }) {
         self.config = config
@@ -43,6 +45,8 @@ public final class IppPrinterHandler {
         let req: IppMessage
         let op: IppGroup
         let printerUri: String
+        /// Read once per request so a mode change applies from the next request on.
+        let cfg: PrinterConfig
         var userName: String {
             if let s = op["requesting-user-name"]?.stringValue, !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return s }
             return "anonymous"
@@ -74,12 +78,12 @@ public final class IppPrinterHandler {
         if op["printer-uri"]?.stringValue == nil && op["job-uri"]?.stringValue == nil {
             throw IppError(IppStatus.clientErrorBadRequest, "Missing printer-uri")
         }
-        let ctx = Ctx(req: req, op: op, printerUri: printerUri)
+        let ctx = Ctx(req: req, op: op, printerUri: printerUri, cfg: config())
         switch req.code {
         case IppOperation.getPrinterAttributes: return getPrinterAttributes(ctx)
         case IppOperation.validateJob:
             try checkCompression(op)
-            _ = try declaredFormat(op)
+            _ = try declaredFormat(ctx)
             return ok(req)
         case IppOperation.printJob: return try printJob(ctx, document)
         case IppOperation.createJob: return try createJob(ctx)
@@ -100,7 +104,7 @@ public final class IppPrinterHandler {
     private func getPrinterAttributes(_ ctx: Ctx) -> IppMessage {
         let now = clock()
         let queued = Int32(clamping: jobs.list().filter { !$0.state.isTerminal }.count)
-        let all = PrinterAttributes.build(config: config(), printerUri: ctx.printerUri, queuedJobCount: queued,
+        let all = PrinterAttributes.build(config: ctx.cfg, printerUri: ctx.printerUri, queuedJobCount: queued,
                                           upTimeSeconds: upTime(now), now: now, changeTime: startTime)
         let selected: [IppAttribute]
         if let requested = ctx.requested.map(Set.init), !requested.contains("all") {
@@ -127,41 +131,43 @@ public final class IppPrinterHandler {
 
     private func printJob(_ ctx: Ctx, _ document: ByteInputStream) throws -> IppMessage {
         try checkCompression(ctx.op)
-        let declared = try declaredFormat(ctx.op)
+        let declared = try declaredFormat(ctx)
         let job = jobs.create(name: jobName(ctx.op), userName: ctx.userName, format: declared ?? Self.octetStream)
-        let stored = try store(job.id, declared, document)
+        let stored = try store(ctx, job.id, declared, document)
         return ok(ctx.req, [shortJobGroup(stored, ctx.printerUri)])
     }
 
     private func createJob(_ ctx: Ctx) throws -> IppMessage {
         try checkCompression(ctx.op)
-        let declared = try declaredFormat(ctx.op)
+        let declared = try declaredFormat(ctx)
         let job = jobs.create(name: jobName(ctx.op), userName: ctx.userName, format: declared ?? Self.octetStream)
         return ok(ctx.req, [shortJobGroup(job, ctx.printerUri)])
     }
 
     private func sendDocument(_ ctx: Ctx, _ document: ByteInputStream) throws -> IppMessage {
         try checkCompression(ctx.op)
-        let declared = try declaredFormat(ctx.op)
+        let declared = try declaredFormat(ctx)
         guard case .bool = ctx.op["last-document"]?.value else {
             throw IppError(IppStatus.clientErrorBadRequest, "Missing last-document")
         }
         let job = try findJob(ctx)
         // Only single-document jobs: the document is stored and the job completed whatever last-document says.
         let head = try readHead(document)
-        let stored = job.format != Self.octetStream ? job.format : nil
+        // The format recorded at Create-Job; in PDF-only mode anything but PDF (e.g. a job created before a mode
+        // switch) is ignored so the document is sniffed and checked.
+        let stored = job.format != Self.octetStream && (ctx.cfg.compatibilityMode || job.format == Self.pdf) ? job.format : nil
         let result: PrintJob
         if head.isEmpty {
             if job.fileURL != nil || job.state.isTerminal {
                 result = job
             } else {
-                result = try store(job.id, declared ?? stored, DataInputStream(Data()))
+                result = try store(ctx, job.id, declared ?? stored, DataInputStream(Data()))
             }
         } else {
             if job.state.isTerminal {
                 throw IppError(IppStatus.clientErrorNotPossible, "Job \(job.id) is already \(job.state.displayName)")
             }
-            result = try store(job.id, declared ?? stored, PrefixedInputStream(prefix: head, rest: document), head: head)
+            result = try store(ctx, job.id, declared ?? stored, PrefixedInputStream(prefix: head, rest: document), head: head)
         }
         return ok(ctx.req, [shortJobGroup(result, ctx.printerUri)])
     }
@@ -258,11 +264,11 @@ public final class IppPrinterHandler {
     }
 
     /// Validated document-format, or nil when absent / application/octet-stream (= sniff).
-    private func declaredFormat(_ op: IppGroup) throws -> String? {
-        guard let raw = op["document-format"]?.stringValue else { return nil }
+    private func declaredFormat(_ ctx: Ctx) throws -> String? {
+        guard let raw = ctx.op["document-format"]?.stringValue else { return nil }
         let base = raw.split(separator: ";", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? raw
         let format = base.trimmingCharacters(in: .whitespaces).lowercased()
-        if !PrinterAttributes.documentFormats.contains(format) {
+        if !PrinterAttributes.documentFormats(config: ctx.cfg).contains(format) {
             throw IppError(IppStatus.clientErrorDocumentFormatNotSupported, "Document format '\(raw)' not supported")
         }
         return format == Self.octetStream ? nil : format
@@ -270,7 +276,8 @@ public final class IppPrinterHandler {
 
     /// Writes the document; sniffs the format from the first bytes when `format` is nil.
     /// `head` are bytes already read from `data` (data still yields them), if any.
-    private func store(_ jobId: Int32, _ format: String?, _ data: ByteInputStream, head: [UInt8]? = nil) throws -> PrintJob {
+    /// PDF-only mode: a sniffed non-PDF document is drained and discarded, the job aborted, and 0x040A returned.
+    private func store(_ ctx: Ctx, _ jobId: Int32, _ format: String?, _ data: ByteInputStream, head: [UInt8]? = nil) throws -> PrintJob {
         var stream = data
         var actual = format
         if actual == nil {
@@ -282,12 +289,25 @@ public final class IppPrinterHandler {
                 stream = PrefixedInputStream(prefix: prefix, rest: data)
             }
             actual = Self.sniff(prefix)
+            if !ctx.cfg.compatibilityMode && actual != Self.pdf {
+                drain(stream)
+                jobs.setState(jobId, .aborted)
+                throw IppError(IppStatus.clientErrorDocumentFormatNotSupported, Self.pdfOnlyMessage)
+            }
         }
         do {
             return try jobs.writeDocument(jobId: jobId, format: actual!, data: stream)
         } catch {
             Self.log.warning("Storing document for job \(jobId) failed: \(String(describing: error))")
             throw IppError(IppStatus.serverErrorInternalError, "Failed to store document: \(error)")
+        }
+    }
+
+    /// Reads and discards the rest of `input`; read errors just end the drain.
+    private func drain(_ input: ByteInputStream) {
+        var buf = [UInt8](repeating: 0, count: 64 * 1024)
+        buf.withUnsafeMutableBufferPointer { p in
+            while let n = try? input.read(into: p.baseAddress!, maxLength: p.count), n > 0 {}
         }
     }
 

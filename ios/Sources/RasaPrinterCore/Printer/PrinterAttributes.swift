@@ -11,8 +11,7 @@ public enum PrinterAttributes {
             "rp": "ipp/print",
             "ty": config.name,
             "product": "(\(config.makeAndModel))",
-            "pdl": "application/pdf,image/pwg-raster,image/urf,image/jpeg,image/png",
-            "URF": "V1.4,W8,SRGB24,CP1,RS300-600,IS1,MT1-2-3,OB9,PQ3-4-5,DM1",
+            "pdl": config.compatibilityMode ? "application/pdf,image/pwg-raster,image/urf,image/jpeg,image/png" : "application/pdf",
             "Color": "T",
             "Duplex": "F",
             "Scan": "F",
@@ -21,12 +20,21 @@ public enum PrinterAttributes {
             "UUID": config.uuid,
             "priority": "0",
         ]
+        // URF is what makes iOS list the printer for AirPrint; PDF-only mode deliberately omits it.
+        if config.compatibilityMode { m["URF"] = urfSupported.joined(separator: ",") }
         if !config.location.isEmpty { m["note"] = config.location }
         return m
     }
 
-    /// Supported document formats (document-format-supported).
-    public static let documentFormats: [String] = ["application/pdf", "image/pwg-raster", "image/urf", "image/jpeg", "image/png", "application/octet-stream"]
+    /// Supported document formats (document-format-supported) for the config's mode. In PDF-only mode
+    /// application/octet-stream is only a transport type: the document must still sniff as PDF.
+    public static func documentFormats(config: PrinterConfig) -> [String] {
+        config.compatibilityMode
+            ? ["application/pdf", "image/pwg-raster", "image/urf", "image/jpeg", "image/png", "application/octet-stream"]
+            : ["application/pdf", "application/octet-stream"]
+    }
+
+    private static let urfSupported = ["V1.4", "W8", "SRGB24", "CP1", "RS300-600", "IS1", "MT1-2-3", "OB9", "PQ3-4-5", "DM1"]
 
     static let mediaColDatabase = "media-col-database"
 
@@ -74,8 +82,9 @@ public enum PrinterAttributes {
         return templateBases.contains(base) && ["default", "supported", "ready"].contains(suffix)
     }
 
+    /// Superset of names across both modes (compatibility mode adds urf-supported / pwg-raster-*).
     private static func allNames() -> [String] {
-        build(config: PrinterConfig(name: "x", uuid: "x"),
+        build(config: PrinterConfig(name: "x", uuid: "x", compatibilityMode: true),
               printerUri: "ipp://localhost:\(PrinterConfig.defaultPort)\(PrinterConfig.resourcePath)",
               queuedJobCount: 0, upTimeSeconds: 1, now: Date(timeIntervalSince1970: 0)).map { $0.name }
     }
@@ -109,7 +118,7 @@ public enum PrinterAttributes {
         c.text("printer-location", config.location)
         c.text("printer-make-and-model", config.makeAndModel)
         c.add("printer-uuid", .uri("urn:uuid:" + config.uuid))
-        c.text("printer-device-id", "MFG:Rasa;MDL:Virtual Printer;CMD:PDF,PWGRaster,URF;CLS:PRINTER;")
+        c.text("printer-device-id", "MFG:Rasa;MDL:Virtual Printer;CMD:\(config.compatibilityMode ? "PDF,PWGRaster,URF" : "PDF");CLS:PRINTER;")
         c.add("printer-more-info", .uri("\(httpBase)/"))
         c.add("printer-icons", .uri("\(httpBase)/icon.png"))
         c.add("printer-geo-location", .outOfBand(IppTag.unknown))
@@ -137,7 +146,7 @@ public enum PrinterAttributes {
 
         // --- document handling
         c.add("document-format-default", .mimeMediaType("application/pdf"))
-        c.add("document-format-supported", documentFormats.map { .mimeMediaType($0) })
+        c.add("document-format-supported", documentFormats(config: config).map { .mimeMediaType($0) })
         c.kw("compression-supported", "none")
         c.kw("pdl-override-supported", "attempted")
         c.bool("multiple-document-jobs-supported", false)
@@ -159,11 +168,13 @@ public enum PrinterAttributes {
         c.kw("identify-actions-default", "display")
         c.kw("identify-actions-supported", "display", "sound")
 
-        // --- raster formats
-        c.add("pwg-raster-document-resolution-supported", [res300, res600])
-        c.kw("pwg-raster-document-type-supported", "black_1", "sgray_8", "srgb_8")
-        c.kw("pwg-raster-document-sheet-back", "normal")
-        c.kw("urf-supported", "V1.4", "W8", "SRGB24", "CP1", "RS300-600", "IS1", "MT1-2-3", "OB9", "PQ3-4-5", "DM1")
+        // --- raster formats (compatibility mode only)
+        if config.compatibilityMode {
+            c.add("pwg-raster-document-resolution-supported", [res300, res600])
+            c.kw("pwg-raster-document-type-supported", "black_1", "sgray_8", "srgb_8")
+            c.kw("pwg-raster-document-sheet-back", "normal")
+            c.add("urf-supported", urfSupported.map { .keyword($0) })
+        }
 
         // --- job template
         c.ints("copies-default", 1)

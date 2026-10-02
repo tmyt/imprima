@@ -20,29 +20,21 @@ struct QuickLookPreview: UIViewControllerRepresentable {
     }
 }
 
+/// Rows of the job list. Presentation state (preview sheet, delete dialog) is owned by the parent
+/// and attached to the enclosing List: attaching `.sheet` to a `Group` inside a List Section applies
+/// it to every row, and the competing presentations dismiss each other immediately.
 struct JobListView: View {
     @EnvironmentObject var service: PrinterService
-    @State private var preview: PrintJob?
-    @State private var pendingDelete: PrintJob?
+    @Binding var preview: PrintJob?
+    @Binding var pendingDelete: PrintJob?
 
     var body: some View {
-        Group {
-            if service.jobs.isEmpty {
-                Text("No print jobs yet. Jobs sent to this printer appear here and in the Files app.")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(service.jobs) { job in row(job) }
-            }
+        if service.jobs.isEmpty {
+            Text("No print jobs yet. Jobs sent to this printer appear here and in the Files app.")
+                .foregroundStyle(.secondary)
+        } else {
+            ForEach(service.jobs) { job in row(job) }
         }
-        .sheet(item: $preview) { job in
-            if let url = job.fileURL { QuickLookPreview(url: url).ignoresSafeArea() }
-        }
-        .confirmationDialog("Delete this job?", isPresented: Binding(get: { pendingDelete != nil },
-                                                                     set: { if !$0 { pendingDelete = nil } }),
-                            titleVisibility: .visible, presenting: pendingDelete) { job in
-            Button("Delete", role: .destructive) { service.deleteJob(job.id) }
-            Button("Cancel", role: .cancel) {}
-        } message: { Text($0.name) }
     }
 
     private func row(_ job: PrintJob) -> some View {

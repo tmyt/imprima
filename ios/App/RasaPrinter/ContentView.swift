@@ -5,13 +5,24 @@ import RasaPrinterCore
 struct ContentView: View {
     @EnvironmentObject var service: PrinterService
     @State private var showSettings = false
+    @State private var preview: PrintJob?
+    @State private var pendingDelete: PrintJob?
 
     var body: some View {
         NavigationStack {
             List {
                 Section { statusCard }
-                Section("Print jobs") { JobListView() }
+                Section("Print jobs") { JobListView(preview: $preview, pendingDelete: $pendingDelete) }
             }
+            .sheet(item: $preview) { job in
+                if let url = job.fileURL { QuickLookPreview(url: url).ignoresSafeArea() }
+            }
+            .confirmationDialog("Delete this job?", isPresented: Binding(get: { pendingDelete != nil },
+                                                                         set: { if !$0 { pendingDelete = nil } }),
+                                titleVisibility: .visible, presenting: pendingDelete) { job in
+                Button("Delete", role: .destructive) { service.deleteJob(job.id) }
+                Button("Cancel", role: .cancel) {}
+            } message: { Text($0.name) }
             .navigationTitle("Rasa Printer")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

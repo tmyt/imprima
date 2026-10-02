@@ -50,7 +50,7 @@
     <string name="ui_mode_pdf_title">PDF only (recommended)</string>
     <string name="ui_mode_pdf_desc">Accepts PDF only. Not visible to AirPrint.</string>
     <string name="ui_mode_compat_title">High compatibility</string>
-    <string name="ui_mode_compat_desc">Also accepts AirPrint raster and images, converted to PDF.</string>
+    <string name="ui_mode_compat_desc">Accepts PDF and AirPrint. Raster pages are converted to PDF.</string>
     <string name="ui_mode_pdf_short">PDF only</string>
     <string name="ui_mode_compat_short">High compatibility</string>
     <string name="ui_mode_line">Mode: %1$s</string>

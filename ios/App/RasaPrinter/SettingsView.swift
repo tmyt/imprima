@@ -51,7 +51,7 @@ struct SettingsView: View {
                     }
                 } header: { Text("Mode") } footer: {
                     Text(compatibility
-                         ? "Also accepts AirPrint raster and images, converted to PDF."
+                         ? "Accepts PDF and AirPrint. Raster pages are converted to PDF."
                          : "Accepts PDF only. Not visible to AirPrint.")
                 }
                 Section("About") {

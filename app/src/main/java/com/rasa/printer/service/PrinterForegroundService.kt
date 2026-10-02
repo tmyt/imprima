@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -135,11 +134,7 @@ class PrinterForegroundService : Service() {
 
     private fun enterForeground() {
         val n = buildNotification()
-        if (Build.VERSION.SDK_INT >= 29) {
-            startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
-        } else {
-            startForeground(NOTIFICATION_ID, n)
-        }
+        startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
     }
 
     private fun notifyUpdate() {
@@ -175,10 +170,8 @@ class PrinterForegroundService : Service() {
     }
 
     private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= 26) {
-            val ch = NotificationChannel(CHANNEL_ID, getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW)
-            getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
-        }
+        val ch = NotificationChannel(CHANNEL_ID, getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW)
+        getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
     }
 
     private fun localAddresses(): List<String> = try {

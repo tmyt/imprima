@@ -1,12 +1,16 @@
 package com.rasa.printer.service
 
 import com.rasa.printer.printer.DocumentConverter
+import com.rasa.printer.printer.DocumentExporter
 import com.rasa.printer.printer.JobState
 import com.rasa.printer.printer.JobStore
 import com.rasa.printer.printer.PrintJob
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +22,7 @@ import kotlinx.serialization.json.Json
 class FileJobStore(
     private val dir: File,
     private val converter: DocumentConverter? = null,
+    private val exporter: DocumentExporter? = null,
 ) : JobStore {
 
     @Serializable
@@ -30,6 +35,7 @@ class FileJobStore(
         val createdAt: Long,
         val sizeBytes: Long = 0,
         val fileName: String? = null,
+        val uri: String? = null,
     )
 
     @Serializable
@@ -103,17 +109,30 @@ class FileJobStore(
                     log.log(Level.WARNING, "Conversion failed for job $jobId, keeping original", e)
                 }
             }
+            var exportedUri: String? = null
+            if (exporter != null) {
+                try {
+                    val name = displayName(jobId, existing.name, finalFormat)
+                    finalSize = finalFile.length()
+                    exportedUri = exporter.export(finalFile, finalFormat, name)
+                    finalFile.delete()
+                } catch (e: Exception) {
+                    log.log(Level.WARNING, "Export failed for job $jobId, keeping internal file", e)
+                }
+            }
             synchronized(lock) {
                 val cur = byId[jobId]
                 if (cur == null) {
                     finalFile.delete()
+                    exportedUri?.let { exporter?.delete(it) }
                     throw IllegalArgumentException("Job deleted: $jobId")
                 }
                 val updated = cur.copy(
                     format = finalFormat,
                     state = JobState.COMPLETED.ippValue,
                     sizeBytes = finalSize,
-                    fileName = finalFile.name,
+                    fileName = if (exportedUri != null) null else finalFile.name,
+                    uri = exportedUri,
                 )
                 byId[jobId] = updated
                 persist()
@@ -147,12 +166,14 @@ class FileJobStore(
     }
 
     override fun delete(jobId: Int) {
-        synchronized(lock) {
+        val removed = synchronized(lock) {
             val cur = byId.remove(jobId) ?: return
             cur.fileName?.let { File(dir, it).delete() }
             try { persist() } catch (e: IOException) { log.log(Level.WARNING, "persist failed", e) }
             publish()
+            cur
         }
+        removed.uri?.let { exporter?.delete(it) }
     }
 
     override fun list(): List<PrintJob> = _jobs.value
@@ -182,7 +203,15 @@ class FileJobStore(
         createdAt = d.createdAt,
         sizeBytes = d.sizeBytes,
         file = d.fileName?.let { File(dir, it) }?.takeIf { it.exists() },
+        uri = d.uri,
     )
+
+    private fun displayName(jobId: Int, name: String, format: String): String {
+        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+        val clean = name.replace(Regex("[^\\p{L}\\p{N} \\-_.()]+"), "_").trim().take(60).trim()
+            .ifEmpty { "job$jobId" }
+        return "${stamp}_$clean.${extensionFor(format)}"
+    }
 
     private fun extensionFor(format: String) = when (format.lowercase()) {
         "application/pdf" -> "pdf"

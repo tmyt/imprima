@@ -3,7 +3,9 @@ package com.rasa.printer.service
 import com.rasa.printer.printer.JobState
 import com.rasa.printer.printer.ConvertedDocument
 import com.rasa.printer.printer.DocumentConverter
+import com.rasa.printer.printer.DocumentExporter
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.File
 import java.nio.file.Files
 import org.junit.After
@@ -112,5 +114,42 @@ class FileJobStoreTest {
         assertEquals(JobState.COMPLETED, done.state)
         assertEquals("image/urf", done.format)
         assertTrue(done.file!!.exists())
+    }
+
+    private class FakeExporter(val fail: Boolean = false) : DocumentExporter {
+        val names = mutableListOf<String>()
+        val deleted = mutableListOf<String>()
+        override fun export(source: File, format: String, displayName: String): String {
+            if (fail) throw IOException("nope")
+            check(source.exists())
+            names += displayName
+            return "content://test/${names.size}"
+        }
+        override fun delete(uri: String) { deleted += uri }
+    }
+
+    @Test fun exporterMovesDocument() {
+        val ex = FakeExporter()
+        val s = FileJobStore(dir, null, ex)
+        val j = s.create("my doc/1", "u", "application/pdf")
+        val done = s.writeDocument(j.id, "application/pdf", ByteArrayInputStream(ByteArray(10)))
+        assertEquals("content://test/1", done.uri)
+        assertNull(done.file)
+        assertEquals(10L, done.sizeBytes)
+        assertTrue(done.hasDocument)
+        assertFalse(File(dir, "${j.id}.pdf").exists())
+        assertTrue(ex.names[0], Regex("\\d{8}-\\d{6}_my doc_1\\.pdf").matches(ex.names[0]))
+        assertEquals("content://test/1", FileJobStore(dir, null, ex).get(j.id)!!.uri)
+        s.delete(j.id)
+        assertEquals(listOf("content://test/1"), ex.deleted)
+    }
+
+    @Test fun exporterFailureKeepsInternalFile() {
+        val s = FileJobStore(dir, null, FakeExporter(fail = true))
+        val j = s.create("", "u", "application/pdf")
+        val done = s.writeDocument(j.id, "application/pdf", ByteArrayInputStream(ByteArray(4)))
+        assertNull(done.uri)
+        assertTrue(done.file!!.exists())
+        assertEquals(JobState.COMPLETED, done.state)
     }
 }

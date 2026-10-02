@@ -44,7 +44,7 @@ struct JobListView: View {
                 Text("\(job.userName) · \(Self.formatLabel(job.format)) · \(ByteCountFormatter.string(fromByteCount: job.sizeBytes, countStyle: .file))")
                     .font(.footnote).foregroundStyle(.secondary)
                 HStack(spacing: 4) {
-                    Text(job.createdAt, style: .relative)
+                    Text(job.createdAt, format: .dateTime.month().day().hour().minute())
                     Text("· \(Self.stateLabel(job.state))")
                 }
                 .font(.caption).foregroundStyle(.secondary)

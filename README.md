@@ -7,9 +7,11 @@ opened, shared or deleted.
 
 ## How it works
 
+Repository layout: `android/` (Gradle project) and `ios/` (Swift package + Xcode app).
+
 | Component | Path | Role |
 |---|---|---|
-| IPP codec | `app/src/main/java/com/rasa/printer/ipp/` | RFC 8010 binary encode/decode (collections included) |
+| IPP codec | `android/app/src/main/java/com/rasa/printer/ipp/` | RFC 8010 binary encode/decode (collections included) |
 | HTTP server | `.../http/` | Minimal HTTP/1.1 (chunked bodies, `Expect: 100-continue`, keep-alive) |
 | IPP handler | `.../printer/` | IPP Everywhere (PWG 5100.14) operations and printer attributes |
 | Service layer | `.../service/` | Foreground service, file-backed job store, DNS-SD advertising (`_ipp._tcp`, `_universal`/`_print` subtypes) |
@@ -28,6 +30,7 @@ Identify-Printer.
 ## Build / test
 
 ```sh
+cd android
 ./gradlew assembleDebug            # APK in app/build/outputs/apk/debug/
 ./gradlew testDebugUnitTest        # unit tests; also runs CUPS `ipptool` conformance
                                    # suites end-to-end if ipptool is installed (macOS has it)

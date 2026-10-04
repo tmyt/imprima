@@ -1,0 +1,58 @@
+name: iOS
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-tests:
+    name: ImprimaCore tests (macOS)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          ls /usr/bin/ipptool /usr/share/cups/ipptool/ipp-everywhere.test
+
+      # Includes the ipptool IPP Everywhere conformance run and the dns-sd Bonjour tests.
+      - name: swift test
+        run: swift test
+
+  app-build:
+    name: iOS app build (simulator)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ios/App
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Build for iOS Simulator
+        run: |
+          xcodebuild -project Imprima.xcodeproj -scheme Imprima \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO \
+            -derivedDataPath build build | tail -40
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imprima-ios-simulator-app
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/Imprima.app

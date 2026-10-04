@@ -1,5 +1,8 @@
 # Imprima - IPP Everywhere virtual printer for Android and iOS
 
+[![Android](https://github.com/tmyt/imprima/actions/workflows/android.yml/badge.svg)](https://github.com/tmyt/imprima/actions/workflows/android.yml)
+[![iOS](https://github.com/tmyt/imprima/actions/workflows/ios.yml/badge.svg)](https://github.com/tmyt/imprima/actions/workflows/ios.yml)
+
 Turns an Android device into a driverless network printer. Anything "printed" to it
 (from macOS, Windows, Linux/CUPS, iOS AirPrint, Android) is stored on the device as a
 PDF / PWG-Raster / Apple URF / JPEG / PNG file and listed in the app, where it can be

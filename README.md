@@ -39,6 +39,16 @@ cd android
                                    # suites end-to-end if ipptool is installed (macOS has it)
 ```
 
+## Installing Imprima
+
+- **Android**: download the signed APK from the latest [GitHub Release](https://github.com/tmyt/imprima/releases),
+  allow installs from your browser/file manager when asked, and open it. For automatic updates,
+  add this repository to [Obtainium](https://github.com/ImranR98/Obtainium). Releases are built by
+  the `Android release` workflow from `v*` tags; the signing certificate's SHA-256 fingerprint is
+  `EB:A7:B6:69:2C:CF:AF:CD:41:A9:51:43:EE:22:4D:C0:CF:67:8A:C6:E5:62:6C:3B:F2:43:AD:CC:03:71:E6:F3`
+  (printed in every release build log, verifiable with `apksigner verify --print-certs`).
+- **iOS**: distributed through TestFlight (built by Xcode Cloud).
+
 ## Adding the printer on a computer
 
 - **macOS**: System Settings → Printers → Add; the printer appears via Bonjour, or add

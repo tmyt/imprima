@@ -1,5 +1,6 @@
 name: RasaPrinter
 options:
+  developmentLanguage: en
   bundleIdPrefix: com.rasa
   deploymentTarget:
     iOS: "17.0"
@@ -42,6 +43,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.rasa.printer
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
         TARGETED_DEVICE_FAMILY: "1,2"

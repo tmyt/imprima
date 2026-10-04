@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "RasaPrinterCore",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14), .iOS(.v17)],
     products: [
         .library(name: "RasaPrinterCore", targets: ["RasaPrinterCore"]),
@@ -12,6 +13,7 @@ let package = Package(
         .target(
             name: "RasaPrinterCore",
             path: "Sources/RasaPrinterCore",
+            resources: [.process("Resources")],
             swiftSettings: []
         ),
         .testTarget(

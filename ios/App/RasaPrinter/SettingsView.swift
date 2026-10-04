@@ -33,7 +33,7 @@ struct SettingsView: View {
                 Section {
                     TextField("Port", text: $portText).keyboardType(.numberPad)
                 } header: { Text("Port") } footer: {
-                    Text(port == nil ? "Enter a port from 1024 to 65535." : "Port must be 1024 or higher. Default is 8631.")
+                    Text(port == nil ? String(localized: "Enter a port from 1024 to 65535.") : String(localized: "Port must be 1024 or higher. Default is 8631."))
                         .foregroundStyle(port == nil ? Color.red : Color.secondary)
                 }
                 Section("Current addresses") {
@@ -51,8 +51,8 @@ struct SettingsView: View {
                     }
                 } header: { Text("Mode") } footer: {
                     Text(compatibility
-                         ? "Accepts PDF and AirPrint. Raster pages are converted to PDF."
-                         : "Accepts PDF only. Not visible to AirPrint.")
+                         ? String(localized: "Accepts PDF and AirPrint. Raster pages are converted to PDF.")
+                         : String(localized: "Accepts PDF only. Not visible to AirPrint."))
                 }
                 Section("About") {
                     LabeledContent("Version", value: appVersion)

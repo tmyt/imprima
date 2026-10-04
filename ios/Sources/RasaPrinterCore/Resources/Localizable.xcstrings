@@ -1,0 +1,50 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Unexpected end of data": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "データが途中で終了しました"
+          }
+        }
+      }
+    },
+    "Connection closed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続が閉じられました"
+          }
+        }
+      }
+    },
+    "Port %@ is already in use": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート %@ は既に使用されています"
+          }
+        }
+      }
+    },
+    "Cannot bind port %@: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート %@ を開けません: %@"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

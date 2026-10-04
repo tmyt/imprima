@@ -7,7 +7,7 @@ import RasaPrinterCore
 final class PrinterService: ObservableObject {
     @Published var config: PrinterConfig
     @Published var isRunning = false
-    @Published var status = "Stopped"
+    @Published var status = String(localized: "Stopped")
     @Published var addresses: [String] = []
     @Published var jobs: [PrintJob] = []
     @Published var errorMessage: String?
@@ -27,7 +27,7 @@ final class PrinterService: ObservableObject {
             Self.persist(config)
         }
         addresses = Self.localIPv4Addresses()
-        do { _ = try store() } catch { errorMessage = "Could not open job storage: \(error.localizedDescription)" }
+        do { _ = try store() } catch { errorMessage = String(localized: "Could not open job storage: \(error.localizedDescription)") }
     }
 
     private static func persist(_ config: PrinterConfig) {
@@ -79,12 +79,12 @@ final class PrinterService: ObservableObject {
                 throw error
             }
             isRunning = true
-            status = "Running on port \(port)"
+            status = String(localized: "Running on port \(String(port))")
             UIApplication.shared.isIdleTimerDisabled = true
             refreshAddresses()
         } catch {
             errorMessage = error.localizedDescription
-            status = "Stopped"
+            status = String(localized: "Stopped")
             isRunning = false
         }
     }
@@ -95,7 +95,7 @@ final class PrinterService: ObservableObject {
         server?.stop()
         server = nil
         isRunning = false
-        status = "Stopped"
+        status = String(localized: "Stopped")
         UIApplication.shared.isIdleTimerDisabled = false
     }
 

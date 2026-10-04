@@ -46,7 +46,7 @@ struct JobListView: View {
     private func row(_ job: PrintJob) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(job.name.isEmpty ? "Job \(job.id)" : job.name).font(.headline).lineLimit(1)
+                Text(job.name.isEmpty ? String(localized: "Job \(Int(job.id))") : job.name).font(.headline).lineLimit(1)
                 Text(detail(job)).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer()
@@ -95,19 +95,19 @@ struct JobListView: View {
         case "image/png": return "PNG"
         case "image/pwg-raster": return "PWG Raster"
         case "image/urf": return "URF"
-        default: return mime.isEmpty ? "Unknown" : mime
+        default: return mime.isEmpty ? String(localized: "Unknown") : mime
         }
     }
 
     static func stateLabel(_ s: JobState) -> String {
         switch s {
-        case .pending: return "Pending"
-        case .pendingHeld: return "Held"
-        case .processing: return "Processing"
-        case .processingStopped: return "Stopped"
-        case .canceled: return "Canceled"
-        case .aborted: return "Aborted"
-        case .completed: return "Completed"
+        case .pending: return String(localized: "Pending")
+        case .pendingHeld: return String(localized: "Held")
+        case .processing: return String(localized: "Processing")
+        case .processingStopped: return String(localized: "Job stopped")
+        case .canceled: return String(localized: "Canceled")
+        case .aborted: return String(localized: "Aborted")
+        case .completed: return String(localized: "Completed")
         }
     }
 }

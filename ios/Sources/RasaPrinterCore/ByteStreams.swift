@@ -13,8 +13,8 @@ public enum StreamError: Error, Equatable, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .unexpectedEOF: return "Unexpected end of data"
-        case .closed: return "Connection closed"
+        case .unexpectedEOF: return String(localized: "Unexpected end of data", bundle: .module)
+        case .closed: return String(localized: "Connection closed", bundle: .module)
         case .io(let m): return m
         }
     }

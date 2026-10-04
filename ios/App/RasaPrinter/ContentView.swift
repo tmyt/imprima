@@ -65,8 +65,8 @@ struct ContentView: View {
     }
 
     private var statusLine: String {
-        let mode = service.config.compatibilityMode ? "High compatibility" : "PDF only"
-        return service.isRunning ? "Running · \(mode)" : "Stopped · \(mode)"
+        let mode = service.config.compatibilityMode ? String(localized: "High compatibility") : String(localized: "PDF only")
+        return service.isRunning ? String(localized: "Running · \(mode)") : String(localized: "Stopped · \(mode)")
     }
 
     private var statusCard: some View {

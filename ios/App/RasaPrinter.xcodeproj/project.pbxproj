@@ -14,6 +14,7 @@
 		91467BD944CA86023A121439 /* RasaPrinterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D8F84BF334128C63DCC35 /* RasaPrinterApp.swift */; };
 		D7D085CEFB9136FB774791EE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723D092A136BE52B9A0E4CAE /* SettingsView.swift */; };
 		F33ECA9E56F6215721A164ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0286EBD059D2D5243B9E5D2E /* Assets.xcassets */; };
+		F344E0B7486416019B85F996 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 467CE6DB37C06165325D2578 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		123D8F84BF334128C63DCC35 /* RasaPrinterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RasaPrinterApp.swift; sourceTree = "<group>"; };
 		1C90DC40DA92C7D1202AB843 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2D6F097468DAC690C22F80F3 /* RasaPrinter.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RasaPrinter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		467CE6DB37C06165325D2578 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		6C36A02D08E816D3FCF12312 /* PrinterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrinterService.swift; sourceTree = "<group>"; };
 		723D092A136BE52B9A0E4CAE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		82F78D03E9EB127A1803EA35 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -47,6 +49,7 @@
 				82F78D03E9EB127A1803EA35 /* ContentView.swift */,
 				1C90DC40DA92C7D1202AB843 /* Info.plist */,
 				90D9B87FD0AF63E5A3EC3F50 /* JobListView.swift */,
+				467CE6DB37C06165325D2578 /* Localizable.xcstrings */,
 				6C36A02D08E816D3FCF12312 /* PrinterService.swift */,
 				123D8F84BF334128C63DCC35 /* RasaPrinterApp.swift */,
 				723D092A136BE52B9A0E4CAE /* SettingsView.swift */,
@@ -123,6 +126,7 @@
 			knownRegions = (
 				Base,
 				en,
+				ja,
 			);
 			mainGroup = F2CE43B192E98EECB904E188;
 			minimizedProjectReferenceProxies = 1;
@@ -145,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F33ECA9E56F6215721A164ED /* Assets.xcassets in Resources */,
+				F344E0B7486416019B85F996 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,6 +188,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rasa.printer;
 				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -324,6 +330,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rasa.printer;
 				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

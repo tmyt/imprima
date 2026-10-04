@@ -123,7 +123,7 @@ public final class HttpServer {
             let code = errno
             let msg = String(cString: strerror(code))
             Darwin.close(fd4)
-            throw StreamError.io(code == EADDRINUSE ? "Port \(port) is already in use" : "Cannot bind port \(port): \(msg)")
+            throw StreamError.io(code == EADDRINUSE ? String(localized: "Port \(String(port)) is already in use", bundle: .module) : String(localized: "Cannot bind port \(String(port)): \(msg)", bundle: .module))
         }
         return fd4
     }

@@ -24,6 +24,7 @@ targets:
           - _ipp._tcp
           - _universal._sub._ipp._tcp
           - _print._sub._ipp._tcp
+        ITSAppUsesNonExemptEncryption: false
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
         UILaunchScreen: {}

@@ -9,8 +9,8 @@ public struct PrinterConfig: Equatable, Codable {
     public var uuid: String
     public var location: String
     public var makeAndModel: String
-    /// false (default): PDF-only mode — only application/pdf is accepted; no URF/PWG advertised (iOS AirPrint
-    /// does not list the printer; macOS/CUPS send PDF). true: high-compatibility mode — also accepts
+    /// false (default): PDF-only mode - only application/pdf is accepted; no URF/PWG advertised (iOS AirPrint
+    /// does not list the printer; macOS/CUPS send PDF). true: high-compatibility mode - also accepts
     /// image/urf, image/pwg-raster, image/jpeg, image/png (raster converted to PDF) and advertises AirPrint.
     public var compatibilityMode: Bool
     public static let defaultPort: UInt16 = 8631

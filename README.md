@@ -1,4 +1,4 @@
-# Rasa Printer — IPP Everywhere virtual printer for Android and iOS
+# Rasa Printer - IPP Everywhere virtual printer for Android and iOS
 
 Turns an Android device into a driverless network printer. Anything "printed" to it
 (from macOS, Windows, Linux/CUPS, iOS AirPrint, Android) is stored on the device as a

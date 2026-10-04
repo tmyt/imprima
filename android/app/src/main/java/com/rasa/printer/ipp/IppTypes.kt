@@ -1,7 +1,7 @@
 package com.rasa.printer.ipp
 
 /**
- * IPP (RFC 8010 / 8011) data model. FROZEN INTERFACE — do not change signatures.
+ * IPP (RFC 8010 / 8011) data model. FROZEN INTERFACE - do not change signatures.
  */
 object IppTag {
     // delimiter (group) tags

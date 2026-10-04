@@ -159,7 +159,7 @@ public enum PrinterAttributes {
         // Whole documents are stored, so any page range is trivially "honoured".
         c.bool("page-ranges-supported", true)
         // ipptool's ipp-everywhere.test expects "document-number" (as CUPS ippeveprinter sends);
-        // PWG 5100.6 spells the member "document-numbers" — advertise both.
+        // PWG 5100.6 spells the member "document-numbers" - advertise both.
         c.kw("overrides-supported", "document-number", "document-numbers", "pages")
         c.kw("job-creation-attributes-supported",
              "copies", "document-format", "job-name", "media", "media-col", "orientation-requested",

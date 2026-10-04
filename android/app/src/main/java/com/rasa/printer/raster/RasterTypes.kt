@@ -32,7 +32,7 @@ data class RasterPageInfo(
 /** Receives decoded pages row by row. FROZEN INTERFACE. */
 interface RasterSink {
     fun beginPage(info: RasterPageInfo)
-    /** [row] holds exactly info.rowBytes bytes; the buffer is reused between calls — copy if you keep it. */
+    /** [row] holds exactly info.rowBytes bytes; the buffer is reused between calls - copy if you keep it. */
     fun row(row: ByteArray)
     fun endPage()
 }

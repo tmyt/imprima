@@ -33,7 +33,7 @@ public struct RasterPageInfo: Equatable {
     public var heightPoints: Double { Double(heightPx) * 72.0 / Double(dpiY) }
 }
 
-/// Receives decoded pages row by row. FROZEN INTERFACE. `row` buffer is reused — copy if kept.
+/// Receives decoded pages row by row. FROZEN INTERFACE. `row` buffer is reused - copy if kept.
 public protocol RasterSink: AnyObject {
     func beginPage(_ info: RasterPageInfo)
     func row(_ row: UnsafeBufferPointer<UInt8>)

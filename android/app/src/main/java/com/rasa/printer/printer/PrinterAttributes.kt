@@ -174,7 +174,7 @@ object PrinterAttributes {
             // Whole documents are stored, so any page range is trivially "honoured".
             bool("page-ranges-supported", true)
             // ipptool's ipp-everywhere.test expects "document-number" (as CUPS ippeveprinter sends);
-            // PWG 5100.6 spells the member "document-numbers" — advertise both.
+            // PWG 5100.6 spells the member "document-numbers" - advertise both.
             kw("overrides-supported", "document-number", "document-numbers", "pages")
             kw(
                 "job-creation-attributes-supported",

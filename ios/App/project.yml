@@ -1,25 +1,25 @@
-name: RasaPrinter
+name: Imprima
 options:
   developmentLanguage: en
-  bundleIdPrefix: com.rasa
+  bundleIdPrefix: com.imprima
   deploymentTarget:
     iOS: "17.0"
 packages:
-  RasaPrinterCore:
+  ImprimaCore:
     path: ..
 targets:
-  RasaPrinter:
+  Imprima:
     type: application
     platform: iOS
     sources:
-      - RasaPrinter
+      - Imprima
     dependencies:
-      - package: RasaPrinterCore
+      - package: ImprimaCore
     info:
-      path: RasaPrinter/Info.plist
+      path: Imprima/Info.plist
       properties:
-        CFBundleDisplayName: Rasa Printer
-        NSLocalNetworkUsageDescription: Rasa Printer advertises itself as a network printer so other devices can print to it.
+        CFBundleDisplayName: Imprima
+        NSLocalNetworkUsageDescription: Imprima advertises itself as a network printer so other devices can print to it.
         NSBonjourServices:
           - _ipp._tcp
           - _universal._sub._ipp._tcp
@@ -40,7 +40,7 @@ targets:
           - UIInterfaceOrientationLandscapeRight
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rasa.printer
+        PRODUCT_BUNDLE_IDENTIFIER: dev.utatane.imprima
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_EMIT_LOC_STRINGS: YES

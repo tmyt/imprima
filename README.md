@@ -1,4 +1,4 @@
-# Rasa Printer - IPP Everywhere virtual printer for Android and iOS
+# Imprima - IPP Everywhere virtual printer for Android and iOS
 
 Turns an Android device into a driverless network printer. Anything "printed" to it
 (from macOS, Windows, Linux/CUPS, iOS AirPrint, Android) is stored on the device as a
@@ -11,7 +11,7 @@ Repository layout: `android/` (Gradle project) and `ios/` (Swift package + Xcode
 
 | Component | Path | Role |
 |---|---|---|
-| IPP codec | `android/app/src/main/java/com/rasa/printer/ipp/` | RFC 8010 binary encode/decode (collections included) |
+| IPP codec | `android/app/src/main/java/dev/utatane/imprima/ipp/` | RFC 8010 binary encode/decode (collections included) |
 | HTTP server | `.../http/` | Minimal HTTP/1.1 (chunked bodies, `Expect: 100-continue`, keep-alive) |
 | IPP handler | `.../printer/` | IPP Everywhere (PWG 5100.14) operations and printer attributes |
 | Service layer | `.../service/` | Foreground service, file-backed job store, DNS-SD advertising (`_ipp._tcp`, `_universal`/`_print` subtypes) |
@@ -40,7 +40,7 @@ cd android
 
 - **macOS**: System Settings → Printers → Add; the printer appears via Bonjour, or add
   `ipp://<ip>:8631/ipp/print` manually (driver: "AirPrint"/"Secure AirPrint" or generic).
-- **CUPS (Linux)**: `lpadmin -p rasa -E -v ipp://<ip>:8631/ipp/print -m everywhere`
+- **CUPS (Linux)**: `lpadmin -p imprima -E -v ipp://<ip>:8631/ipp/print -m everywhere`
 - **Windows 10/11**: Add printer → the device is discovered as an IPP printer, or
   add by URL `http://<ip>:8631/ipp/print`.
 - **iOS**: Share → Print (requires Android 13+ on the printer side for the `_universal`
@@ -58,7 +58,7 @@ The mode is switched in Settings and takes effect immediately (the advertisement
 ## Where documents go
 
 Finished documents are written to shared storage through MediaStore as
-`Documents/Rasa Printer/<yyyyMMdd-HHmmss>_<job name>.<ext>`, so they show up in the
+`Documents/Imprima/<yyyyMMdd-HHmmss>_<job name>.<ext>`, so they show up in the
 Files app and can be opened by any viewer. Deleting a job in the app removes that file.
 Internal copies are kept only if the export fails.
 
@@ -80,15 +80,15 @@ The page size follows the raster resolution (e.g. 2479×3508 px @ 300 dpi → A4
 ## iOS version (`ios/`)
 
 A Swift port with the same protocol stack lives in `ios/`: the Swift package
-`RasaPrinterCore` (IPP codec, POSIX HTTP/1.1 server, IPP Everywhere handler, URF/PWG
+`ImprimaCore` (IPP codec, POSIX HTTP/1.1 server, IPP Everywhere handler, URF/PWG
 raster → PDF, Bonjour via dnssd) and a SwiftUI app in `ios/App` (project generated with
 xcodegen). Received documents are saved in the app's Documents folder, visible in the
-Files app under "On My iPhone > Rasa Printer".
+Files app under "On My iPhone > Imprima".
 
 ```sh
 cd ios && swift test                      # core tests incl. ipptool conformance (macOS)
 cd ios/App && xcodegen generate && \
-xcodebuild -project RasaPrinter.xcodeproj -scheme RasaPrinter \
+xcodebuild -project Imprima.xcodeproj -scheme Imprima \
   -destination 'platform=iOS Simulator,name=iPhone 18 Pro' build
 ```
 

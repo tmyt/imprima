@@ -1,0 +1,377 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1DAA60C4AEE772E647B44F4E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4F361297EA255667DCF038 /* ContentView.swift */; };
+		2DFC2D295C59A683C19ED4D9 /* JobListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7AD5AC436C71681175B643 /* JobListView.swift */; };
+		37CAACBBD107972DDFC4A0A4 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E4C26D40C3F794A392695C92 /* Localizable.xcstrings */; };
+		3B176367D098E7DF6357A4F6 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40C3D3A700B9662648EEC3 /* SettingsView.swift */; };
+		4FAF95660B191639F70EB0E1 /* PrinterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A915FB781BF041EA3C30CAE8 /* PrinterService.swift */; };
+		5405DA7E2A14C46CAEA40DDA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1B9CE2E2694A83599B736834 /* Assets.xcassets */; };
+		816EC153758C186D30B918E6 /* ImprimaCore in Frameworks */ = {isa = PBXBuildFile; productRef = 759F22B06F5D1363D12EBF66 /* ImprimaCore */; };
+		D3EA76DA9417FD3648C966E6 /* RasaPrinterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B33D2104AFBAB78719A184 /* RasaPrinterApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		135304DEF9A059C6B23DFBE3 /* Imprima.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Imprima.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1B9CE2E2694A83599B736834 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2273CB96B7081F34845B4FAF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3B4F361297EA255667DCF038 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		46B33D2104AFBAB78719A184 /* RasaPrinterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RasaPrinterApp.swift; sourceTree = "<group>"; };
+		4B7AD5AC436C71681175B643 /* JobListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobListView.swift; sourceTree = "<group>"; };
+		A915FB781BF041EA3C30CAE8 /* PrinterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrinterService.swift; sourceTree = "<group>"; };
+		E4C26D40C3F794A392695C92 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		E9C5A0B2C5F77363861DF9A4 /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = ..; sourceTree = SOURCE_ROOT; };
+		FD40C3D3A700B9662648EEC3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5879F9841146A57624E3917E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				816EC153758C186D30B918E6 /* ImprimaCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2753038747FF03545B6522A9 /* Imprima */ = {
+			isa = PBXGroup;
+			children = (
+				1B9CE2E2694A83599B736834 /* Assets.xcassets */,
+				3B4F361297EA255667DCF038 /* ContentView.swift */,
+				2273CB96B7081F34845B4FAF /* Info.plist */,
+				4B7AD5AC436C71681175B643 /* JobListView.swift */,
+				E4C26D40C3F794A392695C92 /* Localizable.xcstrings */,
+				A915FB781BF041EA3C30CAE8 /* PrinterService.swift */,
+				46B33D2104AFBAB78719A184 /* RasaPrinterApp.swift */,
+				FD40C3D3A700B9662648EEC3 /* SettingsView.swift */,
+			);
+			path = Imprima;
+			sourceTree = "<group>";
+		};
+		46FFD3F0B77E7986E4ABE222 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				135304DEF9A059C6B23DFBE3 /* Imprima.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		77FD8D112586B1FFC9C5B8C4 = {
+			isa = PBXGroup;
+			children = (
+				2753038747FF03545B6522A9 /* Imprima */,
+				7BF8D2DD03257DBF0B6E43F3 /* Packages */,
+				46FFD3F0B77E7986E4ABE222 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7BF8D2DD03257DBF0B6E43F3 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				E9C5A0B2C5F77363861DF9A4 /* ios */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5506A3796EADAA9047308F7B /* Imprima */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B214FDA1B658DCAC6793B4BF /* Build configuration list for PBXNativeTarget "Imprima" */;
+			buildPhases = (
+				31FE6B3654C211033A12EF47 /* Sources */,
+				A12B1C19315F70D6860C7E76 /* Resources */,
+				5879F9841146A57624E3917E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Imprima;
+			packageProductDependencies = (
+				759F22B06F5D1363D12EBF66 /* ImprimaCore */,
+			);
+			productName = Imprima;
+			productReference = 135304DEF9A059C6B23DFBE3 /* Imprima.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F9EA7E2690F5B3AFDDA33AA3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					5506A3796EADAA9047308F7B = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 1A95FB3210A8D57F63F3A14B /* Build configuration list for PBXProject "Imprima" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				ja,
+			);
+			mainGroup = 77FD8D112586B1FFC9C5B8C4;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D96E8B719D2DA36984CDF757 /* XCLocalSwiftPackageReference ".." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 46FFD3F0B77E7986E4ABE222 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5506A3796EADAA9047308F7B /* Imprima */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A12B1C19315F70D6860C7E76 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5405DA7E2A14C46CAEA40DDA /* Assets.xcassets in Resources */,
+				37CAACBBD107972DDFC4A0A4 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		31FE6B3654C211033A12EF47 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1DAA60C4AEE772E647B44F4E /* ContentView.swift in Sources */,
+				2DFC2D295C59A683C19ED4D9 /* JobListView.swift in Sources */,
+				4FAF95660B191639F70EB0E1 /* PrinterService.swift in Sources */,
+				D3EA76DA9417FD3648C966E6 /* RasaPrinterApp.swift in Sources */,
+				3B176367D098E7DF6357A4F6 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		270060CB30F8831C4F80EF6C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		48CD5B4E9366420EEFC70864 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		945A314677B7CAFC5E0EEE1F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Imprima/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.utatane.imprima;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D748C12546474F1B7D0B56E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Imprima/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.utatane.imprima;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A95FB3210A8D57F63F3A14B /* Build configuration list for PBXProject "Imprima" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				48CD5B4E9366420EEFC70864 /* Debug */,
+				270060CB30F8831C4F80EF6C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B214FDA1B658DCAC6793B4BF /* Build configuration list for PBXNativeTarget "Imprima" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				945A314677B7CAFC5E0EEE1F /* Debug */,
+				D748C12546474F1B7D0B56E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		D96E8B719D2DA36984CDF757 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		759F22B06F5D1363D12EBF66 /* ImprimaCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ImprimaCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F9EA7E2690F5B3AFDDA33AA3 /* Project object */;
+}

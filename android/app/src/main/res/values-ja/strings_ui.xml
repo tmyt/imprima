@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="ui_app_title">Rasa Printer</string>
+    <string name="ui_app_title">Imprima</string>
     <string name="ui_settings">設定</string>
     <string name="ui_printer_name">プリンタ名: %1$s</string>
     <string name="ui_state_stopped">停止中</string>
@@ -11,7 +11,7 @@
     <string name="ui_toggle_printer">プリンタサービス</string>
     <string name="ui_hint_add_printer">このプリンタをコンピュータにIPP Everywhere（ドライバ不要）プリンタとして追加するか、ネットワークプリンタの一覧から選択してください。</string>
     <string name="ui_jobs_title">印刷ジョブ</string>
-    <string name="ui_jobs_empty">印刷ジョブはまだありません。このプリンタに送られた文書がここに表示されます。Documents/Rasa Printer にも保存されます。</string>
+    <string name="ui_jobs_empty">印刷ジョブはまだありません。このプリンタに送られた文書がここに表示されます。Documents/Imprima にも保存されます。</string>
     <string name="ui_job_by">%1$s · %2$s</string>
     <string name="ui_job_meta">%1$s · %2$s</string>
     <string name="ui_job_unnamed">名称未設定の文書</string>
@@ -44,7 +44,7 @@
     <string name="ui_field_port_error">1024〜65535のポートを入力してください。</string>
     <string name="ui_field_location">設置場所</string>
     <string name="ui_field_uuid">UUID</string>
-    <string name="ui_job_saved_in">Documents/Rasa Printer に保存済み</string>
+    <string name="ui_job_saved_in">Documents/Imprima に保存済み</string>
     <string name="ui_open_folder">フォルダを開く</string>
     <string name="ui_no_file_manager">ファイル管理アプリが見つかりません</string>
     <string name="ui_mode_pdf_title">PDFのみ（推奨）</string>
@@ -63,7 +63,7 @@
     <string name="ui_delete_all_message">%1$d 件のジョブと文書を削除します。</string>
     <string name="ui_job_n">ジョブ %1$d</string>
     <string name="ui_jobs_empty_title">印刷ジョブはまだありません</string>
-    <string name="ui_jobs_empty_hint">このプリンタに送られた文書がここと Documents/Rasa Printer に表示されます。</string>
+    <string name="ui_jobs_empty_hint">このプリンタに送られた文書がここと Documents/Imprima に表示されます。</string>
     <string name="ui_section_printer">プリンタ</string>
     <string name="ui_section_network">ポート</string>
     <string name="ui_section_mode">モード</string>

@@ -3,23 +3,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "RasaPrinterCore",
+    name: "ImprimaCore",
     defaultLocalization: "en",
     platforms: [.macOS(.v14), .iOS(.v17)],
     products: [
-        .library(name: "RasaPrinterCore", targets: ["RasaPrinterCore"]),
+        .library(name: "ImprimaCore", targets: ["ImprimaCore"]),
     ],
     targets: [
         .target(
-            name: "RasaPrinterCore",
-            path: "Sources/RasaPrinterCore",
+            name: "ImprimaCore",
+            path: "Sources/ImprimaCore",
             resources: [.process("Resources")],
             swiftSettings: []
         ),
         .testTarget(
-            name: "RasaPrinterCoreTests",
-            dependencies: ["RasaPrinterCore"],
-            path: "Tests/RasaPrinterCoreTests",
+            name: "ImprimaCoreTests",
+            dependencies: ["ImprimaCore"],
+            path: "Tests/ImprimaCoreTests",
             resources: [.copy("Fixtures")],
             swiftSettings: []
         ),

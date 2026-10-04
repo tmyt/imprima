@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.rasa.printer"
+    namespace = "dev.utatane.imprima"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.rasa.printer"
+        applicationId = "dev.utatane.imprima"
         minSdk = 29
         targetSdk = 36
         versionCode = 1

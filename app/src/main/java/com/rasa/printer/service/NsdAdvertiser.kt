@@ -5,6 +5,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.ext.SdkExtensions
 import android.util.Log
 import com.rasa.printer.printer.PrinterAttributes
 import com.rasa.printer.printer.PrinterConfig
@@ -46,7 +47,9 @@ class NsdAdvertiser(
             serviceType = "_ipp._tcp"
             port = this@NsdAdvertiser.port
             PrinterAttributes.bonjourTxt(config).forEach { (k, v) -> setAttribute(k, v) }
-            if (withSubtypes && Build.VERSION.SDK_INT >= 33) subtypes = if (config.compatibilityMode) setOf("_universal", "_print") else setOf("_print")
+            if (withSubtypes && Build.VERSION.SDK_INT >= 33 && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.TIRAMISU) >= 12) {
+                subtypes = if (config.compatibilityMode) setOf("_universal", "_print") else setOf("_print")
+            }
         }
         val variant = if (withSubtypes) "with subtypes" else "without subtypes"
         val l = object : NsdManager.RegistrationListener {

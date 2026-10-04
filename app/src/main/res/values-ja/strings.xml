@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Rasa Printer</string>
+    <string name="notification_channel">プリンタサービス</string>
+    <string name="notification_title">ポート %1$d でプリンタが稼働中</string>
+    <string name="notification_jobs">受信したジョブ: %1$d</string>
+    <string name="notification_stop">停止</string>
+</resources>

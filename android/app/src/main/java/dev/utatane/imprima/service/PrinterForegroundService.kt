@@ -8,13 +8,18 @@ import android.app.Service
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.Uri
 import android.os.IBinder
+import android.text.format.Formatter
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import dev.utatane.imprima.R
 import dev.utatane.imprima.http.HttpServer
 import dev.utatane.imprima.printer.IppHttpHandler
 import dev.utatane.imprima.printer.IppPrinterHandler
+import dev.utatane.imprima.printer.JobState
+import dev.utatane.imprima.printer.PrintJob
+import dev.utatane.imprima.ui.MainActivity
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.concurrent.Executors
@@ -23,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 class PrinterForegroundService : Service() {
@@ -33,6 +37,7 @@ class PrinterForegroundService : Service() {
     private var advertiser: NsdAdvertiser? = null
     private var port = PrinterController.config.value.port
     private var jobCount = 0
+    private var seenStates: Map<Int, JobState>? = null
     @Volatile private var running = false
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -79,12 +84,56 @@ class PrinterForegroundService : Service() {
 
     private fun CoroutineScope.launchJobObserver() {
         PrinterController.jobStore(this@PrinterForegroundService).jobs
-            .map { it.size }
-            .onEach { n ->
-                jobCount = n
+            .onEach { list ->
+                jobCount = list.size
                 if (running) notifyUpdate()
+                val first = seenStates == null
+                val prev = seenStates ?: emptyMap()
+                seenStates = list.associate { it.id to it.state }
+                if (!first) {
+                    list.filter { it.state == JobState.COMPLETED && prev[it.id] != JobState.COMPLETED }
+                        .forEach(::notifyJobCompleted)
+                }
             }
             .launchIn(this)
+    }
+
+    private fun notifyJobCompleted(job: PrintJob) {
+        try {
+            val contentIntent = if (job.uri != null) {
+                Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(Uri.parse(job.uri), job.format)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } else {
+                Intent().setComponent(ComponentName(this, MainActivity::class.java))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+            val pi = PendingIntent.getActivity(
+                this, job.id, contentIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            val title = job.name.ifBlank { getString(R.string.job_fallback_name, job.id) }
+            val text = formatLabel(job.format) + " \u00b7 " + Formatter.formatShortFileSize(this, job.sizeBytes)
+            val n = NotificationCompat.Builder(this, JOBS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setContentIntent(pi)
+                .setAutoCancel(true)
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .build()
+            getSystemService(NotificationManager::class.java).notify(JOB_NOTIFICATION_BASE + job.id, n)
+        } catch (e: Exception) {
+            Log.w(TAG, "job notification failed", e)
+        }
+    }
+
+    private fun formatLabel(mime: String) = when (mime.lowercase()) {
+        "application/pdf" -> "PDF"
+        "image/jpeg" -> "JPEG"
+        "image/png" -> "PNG"
+        "image/pwg-raster" -> "PWG Raster"
+        "image/urf" -> "URF"
+        else -> mime
     }
 
     private fun bringUp() {
@@ -171,7 +220,11 @@ class PrinterForegroundService : Service() {
 
     private fun createChannel() {
         val ch = NotificationChannel(CHANNEL_ID, getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW)
-        getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
+        val nm = getSystemService(NotificationManager::class.java)
+        nm.createNotificationChannel(ch)
+        nm.createNotificationChannel(
+            NotificationChannel(JOBS_CHANNEL_ID, getString(R.string.notification_channel_jobs), NotificationManager.IMPORTANCE_DEFAULT)
+        )
     }
 
     private fun localAddresses(): List<String> = try {
@@ -191,6 +244,8 @@ class PrinterForegroundService : Service() {
         const val ACTION_STOP = "dev.utatane.imprima.action.STOP"
         const val ACTION_RESTART = "dev.utatane.imprima.action.RESTART"
         private const val CHANNEL_ID = "printer"
+        private const val JOBS_CHANNEL_ID = "jobs"
+        private const val JOB_NOTIFICATION_BASE = 1000
         private const val NOTIFICATION_ID = 1
         private const val TAG = "Imprima"
     }

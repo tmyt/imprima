@@ -4,4 +4,6 @@
     <string name="notification_title">ポート %1$d でプリンタが稼働中</string>
     <string name="notification_jobs">受信したジョブ: %1$d</string>
     <string name="notification_stop">停止</string>
+    <string name="notification_channel_jobs">受信した文書</string>
+    <string name="job_fallback_name">ジョブ %1$d</string>
 </resources>

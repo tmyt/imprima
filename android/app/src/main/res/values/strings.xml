@@ -4,4 +4,6 @@
     <string name="notification_title">Printer running on port %1$d</string>
     <string name="notification_jobs">Jobs received: %1$d</string>
     <string name="notification_stop">Stop</string>
+    <string name="notification_channel_jobs">Received documents</string>
+    <string name="job_fallback_name">Job %1$d</string>
 </resources>

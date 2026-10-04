@@ -56,7 +56,7 @@ jobs:
         run: |
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           "$APKSIGNER" verify --print-certs "dist/Imprima-${{ steps.ver.outputs.name }}.apk" | grep -i "SHA-256"
-          keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass "${{ secrets.KEYSTORE_PASSWORD }}" 2>/dev/null | grep -i "SHA256"
+          keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass "${{ secrets.KEYSTORE_PASSWORD }}" 2>/dev/null | grep -i "SHA.256"
 
       - uses: actions/upload-artifact@v4
         with:
